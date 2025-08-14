@@ -4,10 +4,26 @@ from app.config import settings
 from app.models import Card, PriceChartingLink, PriceSnapshot, CollectionEntry
 
 
-# Create database directory if it doesn't exist
-db_dir = os.path.dirname(settings.db_path)
-if db_dir and not os.path.exists(db_dir):
-    os.makedirs(db_dir, exist_ok=True)
+def ensure_directories():
+    """Ensure all required directories exist with proper permissions."""
+    # Ensure data directory exists
+    data_dir = settings.data_dir
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir, exist_ok=True)
+    
+    # Ensure logs directory exists
+    logs_dir = settings.logs_dir
+    if not os.path.exists(logs_dir):
+        os.makedirs(logs_dir, exist_ok=True)
+    
+    # Ensure database directory exists (should be same as data_dir, but be explicit)
+    db_dir = os.path.dirname(settings.db_path)
+    if db_dir and not os.path.exists(db_dir):
+        os.makedirs(db_dir, exist_ok=True)
+
+
+# Ensure directories exist before creating engine
+ensure_directories()
 
 # SQLite connection string with optimizations
 sqlite_url = f"sqlite:///{settings.db_path}"
@@ -25,6 +41,9 @@ engine = create_engine(
 
 def init_db():
     """Initialize database tables and set SQLite pragmas."""
+    # Ensure directories exist (redundant safety check)
+    ensure_directories()
+    
     # Set SQLite pragmas for better performance and data integrity
     with engine.connect() as conn:
         conn.execute(text("PRAGMA foreign_keys=ON"))

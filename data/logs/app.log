@@ -265,3 +265,25 @@
 2025-08-14 15:17:19,117 - cards_api - INFO - {"card_id": 1, "card_name": "Pikachu Birthday", "history_points_count": 1, "request_id": "6c457b78-bb9b-4d0d-9fe4-347d10aed34d", "event": "price_history_request", "logger": "cards_api", "level": "info", "timestamp": "2025-08-14T19:17:19.117312Z"}
 2025-08-14 15:17:48,149 - collection_api - INFO - {"card_id": 1, "card_name": "Pikachu Birthday", "entry_id": 1, "request_id": "3d438350-9563-4dd3-9960-a662d4749f34", "event": "card_completely_removed", "logger": "collection_api", "level": "info", "timestamp": "2025-08-14T19:17:48.149516Z"}
 2025-08-14 15:17:48,153 - collection_api - INFO - {"entry_id": 1, "card_id": 1, "request_id": "3d438350-9563-4dd3-9960-a662d4749f34", "event": "collection_entry_deleted", "logger": "collection_api", "level": "info", "timestamp": "2025-08-14T19:17:48.152995Z"}
+2025-08-14 16:19:24,977 - main - INFO - {"event": "application_shutdown", "logger": "main", "level": "info", "timestamp": "2025-08-14T20:19:24.976680Z"}
+2025-08-14 16:19:24,978 - pricing_refresh - INFO - {"event": "pricing_scheduler_stopped", "logger": "pricing_refresh", "level": "info", "timestamp": "2025-08-14T20:19:24.978383Z"}
+2025-08-14 16:19:24,978 - main - INFO - {"event": "pricing_scheduler_stopped", "logger": "main", "level": "info", "timestamp": "2025-08-14T20:19:24.978921Z"}
+2025-08-14 16:19:24,979 - apscheduler.scheduler - INFO - Scheduler has been shut down
+2025-08-14 16:19:25,626 - main - INFO - {"event": "application_startup", "logger": "main", "level": "info", "timestamp": "2025-08-14T20:19:25.626208Z"}
+2025-08-14 16:19:25,627 - main - INFO - {"event": "database_initialized", "logger": "main", "level": "info", "timestamp": "2025-08-14T20:19:25.627613Z"}
+2025-08-14 16:19:25,678 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-08-14 16:19:25,687 - apscheduler.scheduler - INFO - Added job "Daily Price Refresh" to job store "default"
+2025-08-14 16:19:25,687 - apscheduler.scheduler - INFO - Scheduler started
+2025-08-14 16:19:25,687 - pricing_refresh - INFO - {"timezone": "America/New_York", "batch_size": 200, "requests_per_sec": 1, "event": "pricing_scheduler_started", "logger": "pricing_refresh", "level": "info", "timestamp": "2025-08-14T20:19:25.687915Z"}
+2025-08-14 16:19:25,688 - main - INFO - {"event": "pricing_scheduler_started", "logger": "main", "level": "info", "timestamp": "2025-08-14T20:19:25.688089Z"}
+2025-08-14 16:19:42,258 - main - INFO - {"event": "application_shutdown", "logger": "main", "level": "info", "timestamp": "2025-08-14T20:19:42.258291Z"}
+2025-08-14 16:19:42,259 - pricing_refresh - INFO - {"event": "pricing_scheduler_stopped", "logger": "pricing_refresh", "level": "info", "timestamp": "2025-08-14T20:19:42.259399Z"}
+2025-08-14 16:19:42,259 - main - INFO - {"event": "pricing_scheduler_stopped", "logger": "main", "level": "info", "timestamp": "2025-08-14T20:19:42.259469Z"}
+2025-08-14 16:19:42,259 - apscheduler.scheduler - INFO - Scheduler has been shut down
+2025-08-14 16:19:42,787 - main - INFO - {"event": "application_startup", "logger": "main", "level": "info", "timestamp": "2025-08-14T20:19:42.787061Z"}
+2025-08-14 16:19:42,788 - main - INFO - {"event": "database_initialized", "logger": "main", "level": "info", "timestamp": "2025-08-14T20:19:42.788466Z"}
+2025-08-14 16:19:42,811 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-08-14 16:19:42,812 - apscheduler.scheduler - INFO - Added job "Daily Price Refresh" to job store "default"
+2025-08-14 16:19:42,812 - apscheduler.scheduler - INFO - Scheduler started
+2025-08-14 16:19:42,812 - pricing_refresh - INFO - {"timezone": "America/New_York", "batch_size": 200, "requests_per_sec": 1, "event": "pricing_scheduler_started", "logger": "pricing_refresh", "level": "info", "timestamp": "2025-08-14T20:19:42.812681Z"}
+2025-08-14 16:19:42,812 - main - INFO - {"event": "pricing_scheduler_started", "logger": "main", "level": "info", "timestamp": "2025-08-14T20:19:42.812751Z"}

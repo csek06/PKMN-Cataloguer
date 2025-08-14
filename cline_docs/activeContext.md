@@ -1,6 +1,52 @@
 # Active Context - Pokémon Card Cataloguer
 
 ## Current Focus/Issues
+**🚨 DOCKER DEPLOYMENT ISSUES IDENTIFIED (August 14, 2025)**:
+
+### **CRITICAL DEPLOYMENT PROBLEMS**:
+1. **✅ DOCKER PUBLISHING WORKING**: Successfully pushed to Docker Hub and deployed on Unraid
+2. **❌ LOG DIRECTORY CREATION FAILURE**:
+   - **Issue**: Application fails to start because `/data/logs/` directory doesn't exist
+   - **Error**: Had to manually create log directory for container to start
+   - **Root Cause**: `app/logging.py` calls `os.makedirs(logs_dir, exist_ok=True)` but this may fail due to permissions or timing
+   - **Impact**: Container fails to start without manual intervention
+
+3. **❌ DATABASE ACCESS FAILURE**:
+   - **Error**: `sqlite3.OperationalError: unable to open database file`
+   - **Root Cause**: SQLite cannot access `/data/app.db` - likely directory permissions or missing parent directories
+   - **Impact**: Application cannot initialize database, complete startup failure
+   - **Logs**: Multiple startup attempts all failing with same database error
+
+4. **❌ DIRECTORY INITIALIZATION ISSUES**:
+   - **Problem**: Docker container doesn't properly ensure all required directories exist with correct permissions
+   - **Missing**: Robust directory creation in startup sequence
+   - **Needed**: Automatic creation of `/data/` and `/data/logs/` with proper ownership
+
+### **UNRAID CONFIGURATION ANALYSIS**:
+- **Container Name**: `pkmn-cataloguer`
+- **Repository**: `csek06/pkmn-cataloguer` ✅ CORRECT
+- **Port Mapping**: `8000:8000` ✅ CORRECT
+- **Data Directory**: `/data` mapped to `/mnt/user/appdata/pkmn-cataloguer` ✅ CORRECT
+- **Environment Variables**: `DATA_DIR=/data`, `SECRET_KEY` configured ✅ CORRECT
+- **User**: Running as non-root `appuser` ✅ CORRECT (but may cause permission issues)
+
+### **DEPLOYMENT SELF-CONTAINMENT ISSUES**:
+1. **❌ DIRECTORY CREATION**: App doesn't reliably create required directories on first run
+2. **❌ PERMISSION HANDLING**: Non-root user may not have permissions to create directories
+3. **❌ STARTUP ROBUSTNESS**: No graceful handling of missing directories during initialization
+4. **❌ DATABASE INITIALIZATION**: Database creation fails if parent directory doesn't exist
+
+### **FIXES IMPLEMENTED (August 14, 2025)**:
+1. **✅ DOCKERFILE ENHANCEMENT**: Updated to create `/data/logs/` directory with proper permissions
+2. **✅ DATABASE INITIALIZATION ROBUSTNESS**: Added `ensure_directories()` function in `app/db.py`
+3. **✅ LOGGING INITIALIZATION ROBUSTNESS**: Added error handling for directory creation in `app/logging.py`
+4. **✅ STARTUP SEQUENCE**: Directory creation now happens before database engine creation
+5. **✅ PUID/PGID SUPPORT**: Added standard Unraid user/group ID environment variables
+   - **Entrypoint Script**: `docker-entrypoint.sh` handles dynamic user/group creation
+   - **Default Values**: PUID=99, PGID=100 (standard Unraid defaults)
+   - **Proper Ownership**: Sets correct ownership of `/data` and `/app` directories
+   - **Gosu Integration**: Uses `gosu` for secure privilege dropping
+
 **✅ GITHUB WORKFLOW FOR DOCKER PUBLISHING IMPLEMENTED (August 14, 2025)**:
 
 ### **DOCKER PUBLISHING AUTOMATION COMPLETED**:
@@ -378,6 +424,12 @@
    - **Result**: Users can change conditions directly from card details with immediate sync
 
 ## Recent Changes (August 14, 2025)
+### Docker Deployment Issues Identified
+- **❌ Log Directory Creation**: Application fails to start because `/data/logs/` directory doesn't exist
+- **❌ Database Access**: SQLite cannot access database file, likely permission/directory issues
+- **❌ Startup Robustness**: No graceful handling of missing directories during initialization
+- **❌ Self-Containment**: Docker image not fully self-contained for new deployments
+
 ### Collection Table UI Enhancements
 - **✅ Clickable Card Names**: Direct card name → details modal interaction
 - **✅ Card Number Display**: Shows actual card numbers (e.g., "#57")
@@ -417,13 +469,41 @@
 - `templates/_collection_info_section.html` - NEW: Modular collection info with condition dropdown
 - `templates/_card_details.html` - Updated to use modular collection info section
 
+**Docker and Deployment Files**:
+- `Dockerfile` - NEEDS ENHANCEMENT for directory creation and permissions
+- `app/main.py` - Application startup sequence, needs robust directory handling
+- `app/db.py` - Database initialization, needs better directory creation
+- `app/logging.py` - Logging configuration, needs more robust directory creation
+- `app/config.py` - Configuration management with data directory handling
+
 **Data and Configuration**:
 - `app/services/pricecharting_scraper.py` - Working scraper with pricing data
 - `app/models.py` - Database models with condition enums
 - `app/schemas.py` - Request/response models for collection operations
 
 ## Next Steps
-**SYSTEM STATUS**: ✅ ALL CORE FEATURES COMPLETE
+**🚨 URGENT: DOCKER DEPLOYMENT FIXES NEEDED**
+
+### **IMMEDIATE PRIORITY - DEPLOYMENT ROBUSTNESS**:
+1. **🔧 DOCKERFILE ENHANCEMENT**:
+   - **Issue**: Dockerfile creates `/data` but doesn't ensure `/data/logs/` exists
+   - **Fix**: Add explicit creation of all required subdirectories with proper permissions
+   - **Implementation**: Update `RUN mkdir -p /data` to `RUN mkdir -p /data /data/logs`
+
+2. **🔧 APPLICATION STARTUP ROBUSTNESS**:
+   - **Issue**: `app/logging.py` and `app/db.py` don't handle missing directories gracefully
+   - **Fix**: Add robust directory creation with proper error handling in startup sequence
+   - **Implementation**: Ensure all required directories exist before attempting to use them
+
+3. **🔧 PERMISSION HANDLING**:
+   - **Issue**: Non-root `appuser` may not have permissions to create directories
+   - **Fix**: Ensure all directories created with proper ownership in Dockerfile
+   - **Implementation**: Update `chown -R appuser:appuser /app /data` to include all subdirectories
+
+4. **🔧 DATABASE INITIALIZATION ROBUSTNESS**:
+   - **Issue**: SQLite fails if parent directory doesn't exist or has wrong permissions
+   - **Fix**: Ensure database directory exists and is writable before attempting connection
+   - **Implementation**: Add directory creation and permission checks in `app/db.py`
 
 ### **CURRENT SYSTEM CAPABILITIES**:
 1. **✅ COMPLETE COLLECTION MANAGEMENT**:
@@ -441,96 +521,4 @@
 
 3. **✅ USER EXPERIENCE**:
    - **Real-time Updates**: All changes via HTMX without page refreshes
-   - **Intuitive Interface**: Direct interactions (clickable card names, smart controls)
-   - **Complete Information**: All card data displayed properly
-   - **Error Handling**: Robust error handling with user-friendly messages
-
-**OPTIONAL FUTURE ENHANCEMENTS**:
-
-1. **🎯 SERVER-SIDE EVENTS FOR PRICING REFRESH** (Optional Performance Enhancement):
-   - **Current**: HTMX polling every 5 seconds during jobs (works but inefficient)
-   - **Enhancement**: Replace with SSE for real-time job updates
-   - **Benefits**: Reduced server load, better real-time experience
-   - **Status**: Current system works well, SSE would be optimization
-
-2. **📊 ADVANCED FEATURES** (Future Enhancements):
-   - **Bulk Operations**: Multi-card condition/quantity updates
-   - **Advanced Filtering**: Multi-condition filters, price ranges
-   - **Export Functionality**: CSV/PDF collection reports
-   - **Collection Analytics**: Value tracking, condition breakdowns
-
-3. **📊 ADDITIONAL UI ENHANCEMENTS** (Future):
-   - **Bulk Operations**: Select multiple cards for batch condition/quantity updates
-   - **Advanced Filtering**: Filter by multiple conditions, price ranges
-   - **Export Functionality**: CSV/PDF export of collection data
-   - **Collection Statistics**: Total value, condition breakdown, set completion
-
-4. **🚀 PERFORMANCE OPTIMIZATION** (Future):
-   - **Pagination Optimization**: Improve large collection loading
-   - **Caching Strategy**: Cache pricing data for faster page loads
-   - **Search Performance**: Optimize PriceCharting search response times
-
-## Issues Fixed (August 14, 2025)
-
-### **✅ TABLE REFRESH AFTER ADDING CARDS FIXED**:
-1. **Issue**: When searching and adding a card via "Select & Add" button, the collection table wasn't automatically refreshing
-2. **Root Cause**: 
-   - Search modal "Select & Add" button had `onclick="closeSearchModal()"` that closed modal immediately
-   - JavaScript event listener only watched for `/api/collection` requests, not `/api/select-card`
-3. **Solution**: 
-   - Removed `onclick="closeSearchModal()"` from "Select & Add" button in `templates/_search_modal.html`
-   - Updated JavaScript in `templates/index.html` to handle both `/api/collection` and `/api/select-card` endpoints
-   - Now table refreshes automatically after adding cards via search
-4. **Result**: ✅ Collection table now refreshes immediately after adding cards from search
-
-### **✅ CARD NUMBER EXTRACTION ENHANCED**:
-1. **Issue**: Buzzwole GX 57/111 search was returning empty card number `"number": ""`
-2. **Root Cause**: PriceCharting search results didn't include card numbers in the expected HTML elements
-3. **Solution**: Enhanced card number extraction with 5 fallback methods:
-   - Method 1: Extract from image alt text
-   - Method 2: Extract from card name patterns
-   - Method 3: Extract from URL patterns  
-   - Method 4: Extract from row text content
-   - Method 5: **NEW**: Extract from original search query as final fallback
-4. **Implementation**: 
-   - Updated `_extract_search_result_data()` method to accept query parameter
-   - Added query-based extraction: `r'(\d+)/\d+'` pattern matches "57" from "buzzwole gx 57/111"
-   - Enhanced logging to track successful number extraction from query
-5. **Result**: ✅ Card numbers now properly extracted, including from search queries like "buzzwole gx 57/111"
-
-## Status
-**POKÉMON CARD CATALOGUER** ✅ **FULLY FUNCTIONAL & CLEAN**
-
-### **CORE SYSTEM COMPLETE**:
-- ✅ **Search & Discovery**: PriceCharting integration with real-time pricing
-- ✅ **Collection Management**: Complete CRUD operations with smart quantity controls
-- ✅ **Quantity System**: Increase, decrease, and remove items (qty=0 deletion working)
-- ✅ **Condition Management**: Dropdown selection with cross-view synchronization
-- ✅ **Sorting & Filtering**: All 10 columns sortable with visual indicators
-- ✅ **Pricing System**: Automated daily refresh with comprehensive job tracking
-- ✅ **User Interface**: Real-time HTMX updates, intuitive interactions
-- ✅ **Data Integrity**: Proper database relationships and validation
-
-### **VERIFIED WORKING FEATURES**:
-- ✅ **Zero-Quantity Deletion**: Reducing quantity to 0 removes cards from database
-- ✅ **Smart HTMX Swapping**: Conditional delete/update behavior based on quantity
-- ✅ **Real-time Updates**: All changes happen instantly without page refreshes
-- ✅ **Form Data Handling**: Proper HTMX form submission processing
-- ✅ **Cross-View Sync**: Changes in card details reflect in collection table
-- ✅ **Error Handling**: Robust error handling with user-friendly messages
-
-### **SYSTEM PERFORMANCE**:
-- ✅ **Search Speed**: Consistent sub-5-second PriceCharting searches
-- ✅ **Database Performance**: Efficient SQLite operations with proper indexing
-- ✅ **UI Responsiveness**: Instant feedback for all user interactions
-- ✅ **Background Jobs**: Reliable price refresh with timeout protection
-
-### **WORKSPACE CLEANUP COMPLETED (August 14, 2025)**:
-- ✅ **Python Dependencies**: Virtual environment created and all dependencies installed
-- ✅ **JavaScript Errors**: Fixed syntax errors in `templates/_collection_table.html`
-- ✅ **Markdown Linting**: Fixed all markdown formatting issues in README.md and documentation
-- ✅ **Code Quality**: All workspace diagnostics resolved, clean development environment
-- ✅ **Documentation**: Properly formatted README.md with correct markdown syntax
-
-**RECOMMENDATION**: 
-The Pokémon Card Cataloguer is now a complete, production-ready application with a clean development environment. All core functionality is implemented and working correctly, all workspace problems have been resolved, and the codebase follows proper formatting standards. The system provides an excellent user experience for managing Pokémon card collections with accurate market pricing data.
+   - **

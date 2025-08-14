@@ -25,9 +25,17 @@ def redact_url(url: str) -> str:
 
 def configure_logging():
     """Configure structured logging with both console and file output."""
-    # Ensure logs directory exists
+    # Ensure logs directory exists with robust error handling
     logs_dir = settings.logs_dir
-    os.makedirs(logs_dir, exist_ok=True)
+    try:
+        os.makedirs(logs_dir, exist_ok=True)
+    except PermissionError as e:
+        print(f"Warning: Could not create logs directory {logs_dir}: {e}")
+        print("Continuing with console-only logging...")
+        # Continue with console-only logging if directory creation fails
+    except Exception as e:
+        print(f"Error creating logs directory {logs_dir}: {e}")
+        print("Continuing with console-only logging...")
     
     # Clear any existing handlers
     root_logger = logging.getLogger()
