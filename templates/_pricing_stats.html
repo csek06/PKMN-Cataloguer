@@ -1,0 +1,52 @@
+<div id="pricing-stats">
+    <div class="row">
+        <div class="col-md-2">
+            <div class="text-center">
+                <div class="fs-4 fw-bold text-primary">{{ total_jobs }}</div>
+                <div class="small text-muted">Total Jobs</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="text-center">
+                <div class="fs-4 fw-bold text-success">{{ success_rate }}%</div>
+                <div class="small text-muted">Success Rate</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="text-center">
+                <div class="fs-4 fw-bold text-info">
+                    {% if avg_duration_ms > 0 %}
+                    {{ "%.1f"|format(avg_duration_ms / 1000) }}s
+                    {% else %}
+                    --
+                    {% endif %}
+                </div>
+                <div class="small text-muted">Avg Duration</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="text-center">
+                <div class="fs-4 fw-bold text-primary">{{ total_cards_processed }}</div>
+                <div class="small text-muted">Cards Processed</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="text-center">
+                <div class="fs-4 fw-bold text-success">{{ total_cards_succeeded }}</div>
+                <div class="small text-muted">Succeeded</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="text-center">
+                <div class="fs-4 fw-bold text-danger">{{ total_cards_failed }}</div>
+                <div class="small text-muted">Failed</div>
+            </div>
+        </div>
+    </div>
+    
+    {% if total_jobs == 0 %}
+    <div class="alert alert-info mt-3" role="alert">
+        <i class="bi bi-info-circle"></i> No pricing jobs have been completed this month.
+    </div>
+    {% endif %}
+</div>

@@ -1,0 +1,277 @@
+<!-- Application Settings Form -->
+<div class="space-y-6">
+    <!-- Form Header -->
+    <div class="flex items-center justify-between">
+        <h3 class="text-lg font-medium text-gray-900">Application Settings</h3>
+        <div class="text-sm text-gray-500">
+            Settings are stored in the database and take effect immediately
+        </div>
+    </div>
+
+    <!-- Settings Form -->
+    <form 
+        id="app-settings-form"
+        hx-put="/api/settings/app"
+        hx-target="#app-settings-form"
+        hx-swap="outerHTML"
+        hx-indicator="#settings-spinner"
+        class="space-y-6"
+    >
+        <!-- Log Level Setting -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+            <div>
+                <label for="log_level" class="block text-sm font-medium text-gray-700">
+                    Log Level
+                </label>
+                <select 
+                    id="log_level" 
+                    name="log_level" 
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                >
+                    <option value="DEBUG" {% if settings.log_level == "DEBUG" %}selected{% endif %}>DEBUG</option>
+                    <option value="INFO" {% if settings.log_level == "INFO" %}selected{% endif %}>INFO</option>
+                    <option value="WARNING" {% if settings.log_level == "WARNING" %}selected{% endif %}>WARNING</option>
+                    <option value="ERROR" {% if settings.log_level == "ERROR" %}selected{% endif %}>ERROR</option>
+                </select>
+            </div>
+            <div class="md:col-span-2">
+                <p class="text-sm text-gray-600 mt-1">
+                    {{ descriptions.log_level }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Timezone Setting -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+            <div>
+                <label for="local_tz" class="block text-sm font-medium text-gray-700">
+                    Timezone
+                </label>
+                <select 
+                    id="local_tz" 
+                    name="local_tz" 
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                >
+                    <!-- North America -->
+                    <optgroup label="North America">
+                        <option value="America/New_York" {% if settings.local_tz == "America/New_York" %}selected{% endif %}>Eastern Time (New York)</option>
+                        <option value="America/Chicago" {% if settings.local_tz == "America/Chicago" %}selected{% endif %}>Central Time (Chicago)</option>
+                        <option value="America/Denver" {% if settings.local_tz == "America/Denver" %}selected{% endif %}>Mountain Time (Denver)</option>
+                        <option value="America/Los_Angeles" {% if settings.local_tz == "America/Los_Angeles" %}selected{% endif %}>Pacific Time (Los Angeles)</option>
+                        <option value="America/Anchorage" {% if settings.local_tz == "America/Anchorage" %}selected{% endif %}>Alaska Time (Anchorage)</option>
+                        <option value="Pacific/Honolulu" {% if settings.local_tz == "Pacific/Honolulu" %}selected{% endif %}>Hawaii Time (Honolulu)</option>
+                        <option value="America/Toronto" {% if settings.local_tz == "America/Toronto" %}selected{% endif %}>Eastern Time (Toronto)</option>
+                        <option value="America/Vancouver" {% if settings.local_tz == "America/Vancouver" %}selected{% endif %}>Pacific Time (Vancouver)</option>
+                    </optgroup>
+                    
+                    <!-- Europe -->
+                    <optgroup label="Europe">
+                        <option value="Europe/London" {% if settings.local_tz == "Europe/London" %}selected{% endif %}>GMT (London)</option>
+                        <option value="Europe/Paris" {% if settings.local_tz == "Europe/Paris" %}selected{% endif %}>CET (Paris)</option>
+                        <option value="Europe/Berlin" {% if settings.local_tz == "Europe/Berlin" %}selected{% endif %}>CET (Berlin)</option>
+                        <option value="Europe/Rome" {% if settings.local_tz == "Europe/Rome" %}selected{% endif %}>CET (Rome)</option>
+                        <option value="Europe/Madrid" {% if settings.local_tz == "Europe/Madrid" %}selected{% endif %}>CET (Madrid)</option>
+                        <option value="Europe/Amsterdam" {% if settings.local_tz == "Europe/Amsterdam" %}selected{% endif %}>CET (Amsterdam)</option>
+                        <option value="Europe/Stockholm" {% if settings.local_tz == "Europe/Stockholm" %}selected{% endif %}>CET (Stockholm)</option>
+                        <option value="Europe/Moscow" {% if settings.local_tz == "Europe/Moscow" %}selected{% endif %}>MSK (Moscow)</option>
+                    </optgroup>
+                    
+                    <!-- Asia Pacific -->
+                    <optgroup label="Asia Pacific">
+                        <option value="Asia/Tokyo" {% if settings.local_tz == "Asia/Tokyo" %}selected{% endif %}>JST (Tokyo)</option>
+                        <option value="Asia/Seoul" {% if settings.local_tz == "Asia/Seoul" %}selected{% endif %}>KST (Seoul)</option>
+                        <option value="Asia/Shanghai" {% if settings.local_tz == "Asia/Shanghai" %}selected{% endif %}>CST (Shanghai)</option>
+                        <option value="Asia/Hong_Kong" {% if settings.local_tz == "Asia/Hong_Kong" %}selected{% endif %}>HKT (Hong Kong)</option>
+                        <option value="Asia/Singapore" {% if settings.local_tz == "Asia/Singapore" %}selected{% endif %}>SGT (Singapore)</option>
+                        <option value="Asia/Kolkata" {% if settings.local_tz == "Asia/Kolkata" %}selected{% endif %}>IST (India)</option>
+                        <option value="Australia/Sydney" {% if settings.local_tz == "Australia/Sydney" %}selected{% endif %}>AEDT (Sydney)</option>
+                        <option value="Australia/Melbourne" {% if settings.local_tz == "Australia/Melbourne" %}selected{% endif %}>AEDT (Melbourne)</option>
+                        <option value="Pacific/Auckland" {% if settings.local_tz == "Pacific/Auckland" %}selected{% endif %}>NZDT (Auckland)</option>
+                    </optgroup>
+                    
+                    <!-- Other -->
+                    <optgroup label="Other">
+                        <option value="UTC" {% if settings.local_tz == "UTC" %}selected{% endif %}>UTC (Coordinated Universal Time)</option>
+                        <option value="America/Sao_Paulo" {% if settings.local_tz == "America/Sao_Paulo" %}selected{% endif %}>BRT (São Paulo)</option>
+                        <option value="America/Argentina/Buenos_Aires" {% if settings.local_tz == "America/Argentina/Buenos_Aires" %}selected{% endif %}>ART (Buenos Aires)</option>
+                        <option value="Africa/Cairo" {% if settings.local_tz == "Africa/Cairo" %}selected{% endif %}>EET (Cairo)</option>
+                        <option value="Africa/Johannesburg" {% if settings.local_tz == "Africa/Johannesburg" %}selected{% endif %}>SAST (Johannesburg)</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div class="md:col-span-2">
+                <p class="text-sm text-gray-600 mt-1">
+                    {{ descriptions.local_tz }}
+                </p>
+                <p class="text-xs text-gray-500 mt-1">
+                    Select your local timezone for accurate date/time display and job scheduling
+                </p>
+            </div>
+        </div>
+
+        <!-- Price Refresh Batch Size -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+            <div>
+                <label for="price_refresh_batch_size" class="block text-sm font-medium text-gray-700">
+                    Batch Size
+                </label>
+                <input 
+                    type="number" 
+                    id="price_refresh_batch_size" 
+                    name="price_refresh_batch_size" 
+                    value="{{ settings.price_refresh_batch_size }}"
+                    min="10"
+                    max="1000"
+                    step="10"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                >
+            </div>
+            <div class="md:col-span-2">
+                <p class="text-sm text-gray-600 mt-1">
+                    {{ descriptions.price_refresh_batch_size }}
+                </p>
+                <p class="text-xs text-gray-500 mt-1">
+                    Range: 10-1000 cards per batch
+                </p>
+            </div>
+        </div>
+
+        <!-- Price Refresh Rate Limit -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+            <div>
+                <label for="price_refresh_requests_per_sec" class="block text-sm font-medium text-gray-700">
+                    Requests per Second
+                </label>
+                <input 
+                    type="number" 
+                    id="price_refresh_requests_per_sec" 
+                    name="price_refresh_requests_per_sec" 
+                    value="{{ settings.price_refresh_requests_per_sec }}"
+                    min="0.1"
+                    max="10"
+                    step="0.1"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                >
+            </div>
+            <div class="md:col-span-2">
+                <p class="text-sm text-gray-600 mt-1">
+                    {{ descriptions.price_refresh_requests_per_sec }}
+                </p>
+                <p class="text-xs text-gray-500 mt-1">
+                    Range: 0.1-10 requests per second
+                </p>
+            </div>
+        </div>
+
+        <!-- SQL Echo Setting -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+            <div>
+                <label for="sql_echo" class="block text-sm font-medium text-gray-700">
+                    SQL Debug Logging
+                </label>
+                <div class="mt-1">
+                    <label class="inline-flex items-center">
+                        <input 
+                            type="checkbox" 
+                            id="sql_echo" 
+                            name="sql_echo" 
+                            value="true"
+                            {% if settings.sql_echo %}checked{% endif %}
+                            class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        >
+                        <span class="ml-2 text-sm text-gray-700">Enable SQL query logging</span>
+                    </label>
+                </div>
+            </div>
+            <div class="md:col-span-2">
+                <p class="text-sm text-gray-600 mt-1">
+                    {{ descriptions.sql_echo }}
+                </p>
+                <p class="text-xs text-red-500 mt-1">
+                    ⚠️ Warning: This creates very verbose logs and should only be enabled for debugging
+                </p>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+            <div class="flex items-center">
+                <div id="settings-spinner" class="htmx-indicator">
+                    <div class="spinner w-4 h-4 mr-2"></div>
+                </div>
+                <span class="text-sm text-gray-500">Changes are saved automatically</span>
+            </div>
+            <div class="flex space-x-3">
+                <button 
+                    type="button"
+                    onclick="document.getElementById('app-settings-form').reset()"
+                    class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                    Reset
+                </button>
+                <button 
+                    type="submit"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Save Settings
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Success/Error Messages -->
+    <div id="settings-messages" class="hidden">
+        <!-- Messages will be inserted here by HTMX -->
+    </div>
+</div>
+
+<script>
+// Handle form submission success
+document.addEventListener('htmx:afterRequest', function(evt) {
+    if (evt.detail.elt.id === 'app-settings-form') {
+        if (evt.detail.xhr.status === 200) {
+            // Show success message
+            showSettingsMessage('Settings saved successfully!', 'success');
+            
+            // Refresh pricing status to show updated values
+            htmx.trigger('#pricing-status', 'refresh');
+        } else {
+            // Show error message
+            const response = JSON.parse(evt.detail.xhr.responseText);
+            showSettingsMessage(response.detail || 'Failed to save settings', 'error');
+        }
+    }
+});
+
+function showSettingsMessage(message, type) {
+    const messagesDiv = document.getElementById('settings-messages');
+    const alertClass = type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800';
+    const iconPath = type === 'success' 
+        ? 'M5 13l4 4L19 7' 
+        : 'M6 18L18 6M6 6l12 12';
+    
+    messagesDiv.innerHTML = `
+        <div class="rounded-md border p-4 ${alertClass}">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${iconPath}"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium">${message}</p>
+                </div>
+            </div>
+        </div>
+    `;
+    messagesDiv.classList.remove('hidden');
+    
+    // Hide message after 5 seconds
+    setTimeout(() => {
+        messagesDiv.classList.add('hidden');
+    }, 5000);
+}
+</script>

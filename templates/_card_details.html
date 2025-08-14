@@ -1,0 +1,253 @@
+<div class="p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-semibold text-gray-900">{{ card.name }}</h2>
+        <button onclick="closeCardDetailsModal()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Left Column: Card Image and Basic Info -->
+        <div class="space-y-6">
+            <!-- Card Image -->
+            <div class="flex justify-center">
+                <img 
+                    src="{{ card.image_large }}" 
+                    alt="{{ card.name }}"
+                    class="max-w-full h-auto rounded-lg shadow-lg"
+                    style="max-height: 400px;"
+                >
+            </div>
+
+            <!-- Basic Card Info -->
+            <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Set</dt>
+                        <dd class="text-sm text-gray-900">{{ card.set_name }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Number</dt>
+                        <dd class="text-sm text-gray-900">#{{ card.number }}</dd>
+                    </div>
+                    {% if card.rarity %}
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Rarity</dt>
+                        <dd class="text-sm text-gray-900">{{ card.rarity }}</dd>
+                    </div>
+                    {% endif %}
+                    {% if card.supertype %}
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Type</dt>
+                        <dd class="text-sm text-gray-900">{{ card.supertype }}</dd>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if card.subtypes %}
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Subtypes</dt>
+                    <dd class="text-sm text-gray-900">{{ card.subtypes|join(', ') }}</dd>
+                </div>
+                {% endif %}
+                
+                {% if card.release_date %}
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Release Date</dt>
+                    <dd class="text-sm text-gray-900">{{ card.release_date.strftime('%B %d, %Y') }}</dd>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- External Links -->
+            <div class="space-y-2">
+                <h3 class="text-sm font-medium text-gray-900">External Links</h3>
+                <div class="flex flex-wrap gap-2">
+                    <a 
+                        href="{{ external_links.tcg_api }}" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center px-3 py-1 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                        </svg>
+                        Pokémon TCG
+                    </a>
+                    {% if external_links.pricecharting %}
+                    <a 
+                        href="{{ external_links.pricecharting }}" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center px-3 py-1 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        </svg>
+                        PriceCharting
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Collection Info and Pricing -->
+        <div class="space-y-6">
+            <!-- Collection Info -->
+            {% if collection_entry %}
+            {% include '_collection_info_section.html' %}
+            {% endif %}
+
+            <!-- Current Pricing -->
+            {% if has_pricing and latest_price %}
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-green-900 mb-3">Current Pricing</h3>
+                <div class="space-y-2">
+                    {% if latest_price.ungraded_cents %}
+                    <div class="flex justify-between">
+                        <span class="text-sm text-green-700">Ungraded</span>
+                        <span class="text-sm font-medium text-green-900">${{ "%.2f"|format(latest_price.ungraded_cents / 100) }}</span>
+                    </div>
+                    {% endif %}
+                    {% if latest_price.psa9_cents %}
+                    <div class="flex justify-between">
+                        <span class="text-sm text-green-700">PSA 9</span>
+                        <span class="text-sm font-medium text-green-900">${{ "%.2f"|format(latest_price.psa9_cents / 100) }}</span>
+                    </div>
+                    {% endif %}
+                    {% if latest_price.psa10_cents %}
+                    <div class="flex justify-between">
+                        <span class="text-sm text-green-700">PSA 10</span>
+                        <span class="text-sm font-medium text-green-900">${{ "%.2f"|format(latest_price.psa10_cents / 100) }}</span>
+                    </div>
+                    {% endif %}
+                    {% if latest_price.bgs10_cents %}
+                    <div class="flex justify-between">
+                        <span class="text-sm text-green-700">BGS 10</span>
+                        <span class="text-sm font-medium text-green-900">${{ "%.2f"|format(latest_price.bgs10_cents / 100) }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="mt-3 pt-3 border-t border-green-200">
+                    <p class="text-xs text-green-600">
+                        Last updated: {{ latest_price.as_of_date.strftime('%B %d, %Y') }}
+                    </p>
+                </div>
+            </div>
+            {% elif has_pricing %}
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-gray-900 mb-3">Pricing</h3>
+                <p class="text-sm text-gray-500">No pricing data available for this card.</p>
+            </div>
+            {% endif %}
+
+            <!-- Price History Chart -->
+            {% if has_pricing %}
+            <div class="bg-white border border-gray-200 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-gray-900 mb-3">Price History</h3>
+                <div class="h-64">
+                    <canvas id="price-chart-{{ card.id }}" width="400" height="200"></canvas>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if has_pricing %}
+<script>
+// Load price history chart
+fetch(`/api/cards/{{ card.id }}/price-history.json`)
+    .then(response => response.json())
+    .then(data => {
+        const ctx = document.getElementById('price-chart-{{ card.id }}').getContext('2d');
+        
+        // Prepare chart data
+        const labels = data.history.map(point => {
+            const date = new Date(point.date);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        });
+        
+        const datasets = [];
+        
+        // Add ungraded price line
+        const ungradedData = data.history.map(point => point.ungraded_cents ? point.ungraded_cents / 100 : null);
+        if (ungradedData.some(val => val !== null)) {
+            datasets.push({
+                label: 'Ungraded',
+                data: ungradedData,
+                borderColor: 'rgb(34, 197, 94)',
+                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                tension: 0.1,
+                spanGaps: true
+            });
+        }
+        
+        // Add PSA 10 price line
+        const psa10Data = data.history.map(point => point.psa10_cents ? point.psa10_cents / 100 : null);
+        if (psa10Data.some(val => val !== null)) {
+            datasets.push({
+                label: 'PSA 10',
+                data: psa10Data,
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.1,
+                spanGaps: true
+            });
+        }
+        
+        if (datasets.length === 0) {
+            // No data to display
+            ctx.font = '14px Arial';
+            ctx.fillStyle = '#6B7280';
+            ctx.textAlign = 'center';
+            ctx.fillText('No price history available', ctx.canvas.width / 2, ctx.canvas.height / 2);
+            return;
+        }
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toFixed(2);
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': $' + context.parsed.y.toFixed(2);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    })
+    .catch(error => {
+        console.error('Error loading price history:', error);
+        const ctx = document.getElementById('price-chart-{{ card.id }}').getContext('2d');
+        ctx.font = '14px Arial';
+        ctx.fillStyle = '#EF4444';
+        ctx.textAlign = 'center';
+        ctx.fillText('Error loading price history', ctx.canvas.width / 2, ctx.canvas.height / 2);
+    });
+</script>
+{% endif %}

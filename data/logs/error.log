@@ -1,0 +1,3 @@
+2025-08-14 14:55:45,331 - test - ERROR - This is an error message
+2025-08-14 14:56:37,255 - error_test - ERROR - This is a test error message
+2025-08-14 14:56:37,256 - root - ERROR - Standard Python error test

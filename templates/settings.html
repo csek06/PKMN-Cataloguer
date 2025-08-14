@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Pokémon Card Cataloguer{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="mb-6">
+        <div class="flex justify-between items-center">
+            <h1 class="text-3xl font-bold text-gray-900">Settings</h1>
+            <a href="/" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back to Collection
+            </a>
+        </div>
+    </div>
+
+    <!-- Application Settings -->
+    <div class="bg-white rounded-lg shadow-sm mb-6">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                Application Settings
+            </h2>
+        </div>
+        <div class="p-6">
+            <div id="app-settings-form" hx-get="/api/settings/app/form" hx-trigger="load once">
+                <div class="flex justify-center">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Price Refresh Settings -->
+    <div class="bg-white rounded-lg shadow-sm mb-6">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                </svg>
+                Price Refresh Settings
+            </h2>
+        </div>
+        <div class="p-6">
+            <!-- Status Section -->
+            <div id="pricing-status" hx-get="/api/settings/pricing" hx-trigger="load once">
+                <div class="flex justify-center">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+
+            <!-- Manual Controls -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <div>
+                    <h3 class="text-base font-medium text-gray-900 mb-3">Manual Controls</h3>
+                    <button 
+                        id="run-refresh-btn"
+                        class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        hx-post="/api/settings/pricing/run"
+                        hx-target="#pricing-status"
+                        hx-swap="outerHTML"
+                        hx-confirm="Are you sure you want to run a manual price refresh?"
+                    >
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m-6-8h1m4 0h1M9 6h6"></path>
+                        </svg>
+                        Run Price Refresh Now
+                    </button>
+                </div>
+                <div>
+                    <h3 class="text-base font-medium text-gray-900 mb-3">Current Settings</h3>
+                    <div id="current-settings">
+                        <div class="text-sm text-gray-500">Loading settings...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="bg-white rounded-lg shadow-sm mb-6">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                Statistics
+            </h2>
+        </div>
+        <div class="p-6">
+            <div id="pricing-stats" hx-get="/api/settings/pricing/stats" hx-trigger="load once">
+                <div class="flex justify-center">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job History -->
+    <div class="bg-white rounded-lg shadow-sm mb-6">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Job History
+            </h2>
+        </div>
+        <div class="p-6">
+            <div id="job-history" hx-get="/api/settings/pricing/history" hx-trigger="load">
+                <div class="flex justify-center">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Handle HTMX events for better UX
+document.addEventListener('htmx:beforeRequest', function(evt) {
+    if (evt.detail.elt.id === 'run-refresh-btn') {
+        evt.detail.elt.disabled = true;
+        evt.detail.elt.innerHTML = '<div class="spinner w-4 h-4 mr-2"></div>Starting...';
+    }
+});
+
+document.addEventListener('htmx:afterRequest', function(evt) {
+    if (evt.detail.elt.id === 'run-refresh-btn') {
+        evt.detail.elt.disabled = false;
+        evt.detail.elt.innerHTML = `
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m-6-8h1m4 0h1M9 6h6"></path>
+            </svg>
+            Run Price Refresh Now
+        `;
+    }
+});
+
+// Update settings display when status loads
+document.addEventListener('htmx:afterSwap', function(evt) {
+    if (evt.detail.target.id === 'pricing-status') {
+        updateSettingsDisplay();
+    }
+});
+
+function updateSettingsDisplay() {
+    // This will be populated by the status response
+    const statusData = window.pricingStatusData;
+    if (statusData) {
+        const settingsDiv = document.getElementById('current-settings');
+        settingsDiv.innerHTML = `
+            <div class="text-sm space-y-1">
+                <div><span class="font-medium">Batch Size:</span> ${statusData.batch_size} cards</div>
+                <div><span class="font-medium">Rate Limit:</span> ${statusData.requests_per_sec} req/sec</div>
+                <div><span class="font-medium">Timezone:</span> ${statusData.timezone}</div>
+                <div><span class="font-medium">Scheduler:</span> ${statusData.scheduler_running ? 'Running' : 'Stopped'}</div>
+            </div>
+        `;
+    }
+}
+</script>
+{% endblock %}

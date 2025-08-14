@@ -1,0 +1,112 @@
+{% if results %}
+<div class="p-6">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+        {% for entry, card in results %}
+        {% set latest_price = None %}
+        <div class="relative group card-hover transition-transform duration-200">
+            <!-- Card Image -->
+            <div class="aspect-[2.5/3.5] bg-gray-100 rounded-lg overflow-hidden shadow-md">
+                <img 
+                    src="{{ card.image_large }}" 
+                    alt="{{ card.name }}"
+                    class="w-full h-full object-cover"
+                    loading="lazy"
+                >
+                
+                <!-- Overlay with quick actions -->
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <div class="flex space-x-2">
+                        <!-- View Details -->
+                        <button 
+                            hx-get="/api/cards/{{ card.id }}"
+                            hx-target="#card-details-content"
+                            hx-indicator="#global-loading"
+                            class="bg-white text-gray-900 px-3 py-1 rounded-md text-sm font-medium hover:bg-gray-100 transition-colors"
+                        >
+                            Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Card Info -->
+            <div class="mt-2 space-y-1">
+                <h3 class="text-xs font-medium text-gray-900 truncate" title="{{ card.name }}">
+                    {{ card.name }}
+                </h3>
+                <p class="text-xs text-gray-500 truncate">{{ card.set_name }}</p>
+                
+                <!-- Quantity and Condition -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-1">
+                        <!-- Quantity controls -->
+                        <button 
+                            hx-patch="/api/collection/{{ entry.id }}"
+                            hx-vals='{"qty": {{ entry.qty - 1 }}}'
+                            hx-target="closest .relative"
+                            hx-swap="outerHTML"
+                            {% if entry.qty <= 1 %}disabled{% endif %}
+                            class="w-5 h-5 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs"
+                        >
+                            −
+                        </button>
+                        <span class="text-xs font-medium px-1">{{ entry.qty }}</span>
+                        <button 
+                            hx-patch="/api/collection/{{ entry.id }}"
+                            hx-vals='{"qty": {{ entry.qty + 1 }}}'
+                            hx-target="closest .relative"
+                            hx-swap="outerHTML"
+                            class="w-5 h-5 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-xs"
+                        >
+                            +
+                        </button>
+                    </div>
+                    
+                    <!-- Condition badge -->
+                    {% set condition_colors = {
+                        'NM': 'bg-green-100 text-green-800',
+                        'LP': 'bg-yellow-100 text-yellow-800',
+                        'MP': 'bg-orange-100 text-orange-800',
+                        'HP': 'bg-red-100 text-red-800',
+                        'DMG': 'bg-red-100 text-red-800',
+                        'GRADED': 'bg-purple-100 text-purple-800',
+                        'UNKNOWN': 'bg-gray-100 text-gray-800'
+                    } %}
+                    <span class="inline-flex px-1.5 py-0.5 text-xs font-semibold rounded {{ condition_colors.get(entry.condition.value, 'bg-gray-100 text-gray-800') }}">
+                        {{ entry.condition.value }}
+                    </span>
+                </div>
+                
+                <!-- Price if available -->
+                {% if has_pricing and latest_price and latest_price.ungraded_cents %}
+                <div class="text-xs text-green-600 font-medium">
+                    ${{ "%.2f"|format(latest_price.ungraded_cents / 100) }}
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Card number badge -->
+            <div class="absolute top-2 left-2 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-xs font-medium">
+                #{{ card.number }}
+            </div>
+            
+            <!-- Rarity badge -->
+            {% if card.rarity %}
+            <div class="absolute top-2 right-2 bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium">
+                {{ card.rarity }}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% else %}
+<div class="text-center py-12">
+    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+    </svg>
+    <h3 class="mt-2 text-sm font-medium text-gray-900">No cards in collection</h3>
+    <p class="mt-1 text-sm text-gray-500">Get started by searching for cards to add to your collection.</p>
+</div>
+{% endif %}

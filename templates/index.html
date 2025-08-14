@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div x-data="collectionApp()" x-init="init()">
+    <!-- Header with Search -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">My Collection</h1>
+                <p class="text-gray-600">Manage your Pokémon card collection</p>
+            </div>
+            
+            <!-- Global Search -->
+            <div class="flex-1 max-w-lg">
+                <form hx-post="/api/search" hx-target="#search-results" hx-indicator="#search-loading" onsubmit="showSearchModal()">
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            name="q" 
+                            placeholder="Search to add new cards (e.g., 'buzzwole gx 57/111')"
+                            class="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required
+                        >
+                        <button 
+                            type="submit"
+                            class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                            title="Search for cards"
+                        >
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </button>
+                        <!-- Search Loading Indicator -->
+                        <div id="search-loading" class="htmx-indicator absolute inset-y-0 right-0 pr-3 flex items-center" style="display: none !important;">
+                            <div class="spinner border-blue-600 border-t-transparent w-4 h-4"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Toggle and Filters -->
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+            <!-- View Toggle -->
+            <div class="flex bg-gray-100 rounded-lg p-1">
+                <button 
+                    @click="currentView = 'table'"
+                    :class="currentView === 'table' ? 'bg-white shadow-sm' : ''"
+                    class="px-4 py-2 text-sm font-medium rounded-md transition-colors"
+                >
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                    </svg>
+                    Table
+                </button>
+                <button 
+                    @click="currentView = 'poster'"
+                    :class="currentView === 'poster' ? 'bg-white shadow-sm' : ''"
+                    class="px-4 py-2 text-sm font-medium rounded-md transition-colors"
+                >
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                    </svg>
+                    Poster
+                </button>
+            </div>
+
+            <!-- Quick Filters -->
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        x-model="filters.name"
+                        @input.debounce.500ms="loadCollection()"
+                        placeholder="Filter by name..."
+                        class="pl-8 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                    <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z"></path>
+                        </svg>
+                    </div>
+                </div>
+                
+                <select 
+                    x-model="filters.condition"
+                    @change="loadCollection()"
+                    class="text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                    <option value="">All Conditions</option>
+                    <option value="NM">Near Mint</option>
+                    <option value="LP">Lightly Played</option>
+                    <option value="MP">Moderately Played</option>
+                    <option value="HP">Heavily Played</option>
+                    <option value="DMG">Damaged</option>
+                    <option value="GRADED">Graded</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Collection Content -->
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <!-- Table View -->
+        <div x-show="currentView === 'table'" id="collection-table-container">
+            <div 
+                hx-get="/api/collection"
+                hx-trigger="load once"
+                hx-vals="js:{page: 1, page_size: 50, sort: 'name', direction: 'asc'}"
+            >
+                <!-- Loading placeholder -->
+                <div class="p-8 text-center text-gray-500">
+                    <div class="spinner mx-auto mb-4"></div>
+                    Loading collection...
+                </div>
+            </div>
+        </div>
+
+        <!-- Poster View -->
+        <div x-show="currentView === 'poster'" id="collection-poster-container">
+            <div 
+                hx-get="/api/collection/poster"
+                hx-trigger="load once"
+            >
+                <!-- Loading placeholder -->
+                <div class="p-8 text-center text-gray-500">
+                    <div class="spinner mx-auto mb-4"></div>
+                    Loading collection...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div x-show="isEmpty" class="text-center py-12">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No cards in collection</h3>
+        <p class="mt-1 text-sm text-gray-500">Get started by searching for cards to add to your collection.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function collectionApp() {
+    return {
+        currentView: 'table',
+        isEmpty: false,
+        filters: {
+            name: '',
+            set_name: '',
+            condition: ''
+        },
+        pagination: {
+            page: 1,
+            page_size: 50,
+            sort: 'name',
+            direction: 'asc'
+        },
+
+        init() {
+            // Load initial collection
+            this.loadCollection();
+            
+            // Watch for view changes
+            this.$watch('currentView', () => {
+                this.loadCollection();
+            });
+        },
+
+        loadCollection() {
+            const params = new URLSearchParams({
+                page: this.pagination.page,
+                page_size: this.pagination.page_size,
+                sort: this.pagination.sort,
+                direction: this.pagination.direction,
+                ...this.filters
+            });
+
+            if (this.currentView === 'table') {
+                htmx.ajax('GET', `/api/collection?${params}`, {
+                    target: '#collection-table-container'
+                });
+            } else {
+                htmx.ajax('GET', `/api/collection/poster?name=${this.filters.name}`, {
+                    target: '#collection-poster-container'
+                });
+            }
+        },
+
+        updateSort(column) {
+            if (this.pagination.sort === column) {
+                this.pagination.direction = this.pagination.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                this.pagination.sort = column;
+                this.pagination.direction = 'asc';
+            }
+            this.pagination.page = 1;
+            this.loadCollection();
+        },
+
+        changePage(page) {
+            this.pagination.page = page;
+            this.loadCollection();
+        }
+    }
+}
+
+// Handle successful card additions
+document.addEventListener('htmx:afterRequest', function(event) {
+    if (event.detail.xhr.status === 200 && 
+        (event.detail.pathInfo.requestPath === '/api/collection' || 
+         event.detail.pathInfo.requestPath === '/api/select-card')) {
+        // Reload collection after adding a card
+        setTimeout(() => {
+            const app = Alpine.$data(document.querySelector('[x-data]'));
+            if (app) {
+                app.loadCollection();
+            }
+        }, 100);
+        
+        // Close search modal
+        closeSearchModal();
+    }
+});
+</script>
+{% endblock %}

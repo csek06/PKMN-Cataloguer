@@ -1,0 +1,105 @@
+<tr class="hover:bg-gray-50">
+    <td class="px-6 py-4 whitespace-nowrap">
+        <div class="flex items-center">
+            <div class="flex-shrink-0 h-10 w-8">
+                <img class="h-10 w-8 object-cover rounded" src="{{ card.image_small }}" alt="{{ card.name }}">
+            </div>
+            <div class="ml-4">
+                <div class="text-sm font-medium">
+                    <button 
+                        hx-get="/api/cards/{{ card.id }}"
+                        hx-target="#card-details-content"
+                        hx-indicator="#global-loading"
+                        class="text-blue-600 hover:text-blue-900 hover:underline text-left"
+                    >
+                        {{ card.name }}
+                    </button>
+                </div>
+                {% if card.subtypes %}
+                <div class="text-xs text-gray-500">{{ card.subtypes|join(', ') }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {{ card.set_name }}
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {{ card.number }}
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap">
+        {% if card.rarity %}
+        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+            {{ card.rarity }}
+        </span>
+        {% else %}
+        <span class="text-sm text-gray-400">—</span>
+        {% endif %}
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap">
+        {% set condition_colors = {
+            'NM': 'bg-green-100 text-green-800',
+            'LP': 'bg-yellow-100 text-yellow-800',
+            'MP': 'bg-orange-100 text-orange-800',
+            'HP': 'bg-red-100 text-red-800',
+            'DMG': 'bg-red-100 text-red-800',
+            'GRADED': 'bg-purple-100 text-purple-800',
+            'UNKNOWN': 'bg-gray-100 text-gray-800'
+        } %}
+        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ condition_colors.get(entry.condition.value, 'bg-gray-100 text-gray-800') }}">
+            {{ entry.condition.value }}
+        </span>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        <div class="flex items-center space-x-2">
+            <button 
+                hx-patch="/api/collection/{{ entry.id }}"
+                hx-vals='{"qty": {{ entry.qty - 1 }}}'
+                hx-target="closest tr"
+                hx-swap="{% if entry.qty <= 1 %}delete{% else %}outerHTML{% endif %}"
+                class="w-6 h-6 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-xs"
+            >
+                −
+            </button>
+            <span class="font-medium">{{ entry.qty }}</span>
+            <button 
+                hx-patch="/api/collection/{{ entry.id }}"
+                hx-vals='{"qty": {{ entry.qty + 1 }}}'
+                hx-target="closest tr"
+                hx-swap="outerHTML"
+                class="w-6 h-6 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-xs"
+            >
+                +
+            </button>
+        </div>
+    </td>
+    {% if has_pricing %}
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {% if latest_price and latest_price.ungraded_cents %}
+        <div class="text-green-600 font-medium">
+            ${{ "%.2f"|format(latest_price.ungraded_cents / 100) }}
+        </div>
+        <div class="text-xs text-gray-500">
+            {{ latest_price.as_of_date.strftime('%m/%d/%y') }}
+        </div>
+        {% else %}
+        <span class="text-gray-400">—</span>
+        {% endif %}
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {% if latest_price and latest_price.psa10_cents %}
+        <div class="text-blue-600 font-medium">
+            ${{ "%.2f"|format(latest_price.psa10_cents / 100) }}
+        </div>
+        <div class="text-xs text-gray-500">
+            {{ latest_price.as_of_date.strftime('%m/%d/%y') }}
+        </div>
+        {% else %}
+        <span class="text-gray-400">—</span>
+        {% endif %}
+    </td>
+    {% endif %}
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {{ entry.updated_at.strftime('%m/%d/%y') }}
+    </td>
+</tr>

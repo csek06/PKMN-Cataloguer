@@ -1,0 +1,118 @@
+from datetime import date, datetime
+from enum import Enum
+from typing import List, Optional
+
+from sqlmodel import Field, Relationship, SQLModel, JSON, Column
+
+
+class ConditionEnum(str, Enum):
+    NM = "NM"
+    LP = "LP"
+    MP = "MP"
+    HP = "HP"
+    DMG = "DMG"
+    GRADED = "GRADED"
+    UNKNOWN = "UNKNOWN"
+
+
+class Card(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    tcg_id: str = Field(unique=True, index=True)
+    name: str = Field(index=True)
+    set_id: str = Field(index=True)
+    set_name: str = Field(index=True)
+    number: str
+    rarity: Optional[str] = None
+    supertype: Optional[str] = None
+    subtypes: Optional[List[str]] = Field(default=None, sa_column=Column(JSON))
+    image_small: str
+    image_large: str
+    release_date: Optional[date] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    # Relationships
+    collection_entries: List["CollectionEntry"] = Relationship(back_populates="card")
+    price_snapshots: List["PriceSnapshot"] = Relationship(back_populates="card")
+    pricecharting_links: List["PriceChartingLink"] = Relationship(back_populates="card")
+
+
+class PriceChartingLink(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    card_id: int = Field(foreign_key="card.id", index=True)
+    pc_product_id: str = Field(index=True)
+    pc_product_name: str
+    pc_game_url: Optional[str] = None  # Store the actual game URL (e.g., /game/pokemon-crimson-invasion/buzzwole-gx-57)
+    tcgplayer_id: Optional[str] = None  # TCGPlayer product ID from PriceCharting
+    tcgplayer_url: Optional[str] = None  # Full TCGPlayer URL
+    notes: Optional[str] = None  # Rarity/variant info from PriceCharting Notes field
+    last_synced_at: Optional[datetime] = None
+    
+    # Relationships
+    card: Card = Relationship(back_populates="pricecharting_links")
+
+
+class PriceSnapshot(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    card_id: int = Field(foreign_key="card.id", index=True)
+    as_of_date: date = Field(index=True)
+    ungraded_cents: Optional[int] = None
+    psa9_cents: Optional[int] = None
+    psa10_cents: Optional[int] = None
+    bgs10_cents: Optional[int] = None
+    source: str = Field(default="pricecharting")
+    
+    # Relationships
+    card: Card = Relationship(back_populates="price_snapshots")
+
+
+class CollectionEntry(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    card_id: int = Field(foreign_key="card.id", index=True)
+    qty: int = Field(default=1)
+    condition: ConditionEnum = Field(default=ConditionEnum.UNKNOWN)
+    purchase_price_cents: Optional[int] = None
+    notes: Optional[str] = None
+    tags: Optional[List[str]] = Field(default=None, sa_column=Column(JSON))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    # Relationships
+    card: Card = Relationship(back_populates="collection_entries")
+
+
+class JobHistory(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    job_type: str = Field(index=True)  # "scheduled", "manual"
+    job_name: str = Field(index=True)  # "daily_prices", "manual_refresh"
+    started_at: datetime = Field(index=True)
+    completed_at: Optional[datetime] = None
+    status: str = Field(index=True)  # "running", "completed", "failed"
+    processed: int = Field(default=0)
+    succeeded: int = Field(default=0)
+    failed: int = Field(default=0)
+    duration_ms: Optional[int] = None
+    error_message: Optional[str] = None
+    job_metadata: Optional[dict] = Field(default=None, sa_column=Column(JSON))
+
+
+class AppSettings(SQLModel, table=True):
+    """Application settings stored in database with UI management."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    
+    # Logging Settings
+    log_level: str = Field(default="INFO")  # DEBUG|INFO|WARNING|ERROR
+    
+    # Timezone Settings
+    local_tz: str = Field(default="America/New_York")
+    
+    # Price Refresh Settings
+    price_refresh_batch_size: int = Field(default=200)
+    price_refresh_requests_per_sec: int = Field(default=1)
+    
+    # Database Settings
+    sql_echo: bool = Field(default=False)
+    
+    # Timestamps
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
