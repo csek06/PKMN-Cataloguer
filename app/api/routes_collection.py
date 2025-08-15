@@ -238,37 +238,88 @@ async def get_collection(
         if condition:
             query = query.where(CollectionEntry.condition == condition)
         
-        # Apply sorting
-        sort_column = None
-        if sort == "name":
-            sort_column = Card.name
-        elif sort == "set_name":
-            sort_column = Card.set_name
-        elif sort == "number":
-            sort_column = Card.number
-        elif sort == "rarity":
-            sort_column = Card.rarity
-        elif sort == "condition":
-            sort_column = CollectionEntry.condition
-        elif sort == "qty":
-            sort_column = CollectionEntry.qty
-        elif sort == "ungraded_price":
-            # For price sorting, we'll need to join with PriceSnapshot and sort by latest price
-            # This is more complex, so we'll handle it separately
-            sort_column = Card.name  # Fallback to name for now
-        elif sort == "psa10_price":
-            # For price sorting, we'll need to join with PriceSnapshot and sort by latest price
-            # This is more complex, so we'll handle it separately
-            sort_column = Card.name  # Fallback to name for now
-        elif sort == "updated_at":
-            sort_column = CollectionEntry.updated_at
+        # Apply sorting - handle price columns with proper numerical sorting
+        if sort in ["ungraded_price", "psa10_price"]:
+            # For price sorting, we need to join with the latest PriceSnapshot
+            # Create a subquery to get the latest price snapshot for each card
+            from sqlmodel import text
+            
+            # Create subquery for latest price snapshot per card
+            latest_price_subquery = (
+                select(
+                    PriceSnapshot.card_id,
+                    PriceSnapshot.ungraded_cents,
+                    PriceSnapshot.psa10_cents,
+                    func.row_number().over(
+                        partition_by=PriceSnapshot.card_id,
+                        order_by=PriceSnapshot.as_of_date.desc()
+                    ).label('rn')
+                )
+                .subquery()
+            )
+            
+            # Filter to only get the latest price (rn = 1)
+            latest_prices = (
+                select(
+                    latest_price_subquery.c.card_id,
+                    latest_price_subquery.c.ungraded_cents,
+                    latest_price_subquery.c.psa10_cents
+                )
+                .where(latest_price_subquery.c.rn == 1)
+                .subquery()
+            )
+            
+            # Join the main query with latest prices
+            query = (
+                select(CollectionEntry, Card)
+                .select_from(CollectionEntry)
+                .join(Card, CollectionEntry.card_id == Card.id)
+                .outerjoin(latest_prices, Card.id == latest_prices.c.card_id)
+            )
+            
+            # Re-apply filters after rebuilding query
+            if name:
+                query = query.where(Card.name.ilike(f"%{name}%"))
+            if set_name:
+                query = query.where(Card.set_name.ilike(f"%{set_name}%"))
+            if condition:
+                query = query.where(CollectionEntry.condition == condition)
+            
+            # Apply price-based sorting
+            if sort == "ungraded_price":
+                sort_column = latest_prices.c.ungraded_cents
+            else:  # psa10_price
+                sort_column = latest_prices.c.psa10_cents
+            
+            # Handle null values - put them at the end regardless of sort direction
+            if direction.lower() == "desc":
+                query = query.order_by(sort_column.desc().nulls_last())
+            else:
+                query = query.order_by(sort_column.asc().nulls_last())
         else:
-            sort_column = Card.name
-        
-        if direction.lower() == "desc":
-            sort_column = sort_column.desc()
-        
-        query = query.order_by(sort_column)
+            # Regular sorting for non-price columns
+            sort_column = None
+            if sort == "name":
+                sort_column = Card.name
+            elif sort == "set_name":
+                sort_column = Card.set_name
+            elif sort == "number":
+                sort_column = Card.number
+            elif sort == "rarity":
+                sort_column = Card.rarity
+            elif sort == "condition":
+                sort_column = CollectionEntry.condition
+            elif sort == "qty":
+                sort_column = CollectionEntry.qty
+            elif sort == "updated_at":
+                sort_column = CollectionEntry.updated_at
+            else:
+                sort_column = Card.name
+            
+            if direction.lower() == "desc":
+                sort_column = sort_column.desc()
+            
+            query = query.order_by(sort_column)
         
         # Count total results
         count_query = (

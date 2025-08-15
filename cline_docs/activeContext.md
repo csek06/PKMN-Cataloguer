@@ -1,6 +1,32 @@
 # Active Context - Pokémon Card Cataloguer
 
 ## Current Focus/Issues
+**✅ NUMERICAL SORTING BUG FIXED (August 15, 2025)**:
+
+### **PRICE COLUMN SORTING ISSUE RESOLVED**:
+1. **✅ ISSUE IDENTIFIED**:
+   - **Problem**: "UNGRADED" and "PSA 10" columns were sorting alphabetically (text-based) instead of numerically
+   - **Example**: Values like "$10.42", "$22.86", "$25.75" were sorted as text strings, not by numeric value
+   - **Root Cause**: Collection API was falling back to sorting by card name for price columns instead of implementing proper numerical sorting
+
+2. **✅ NUMERICAL SORTING IMPLEMENTED**:
+   - **Solution**: Enhanced collection API with proper price-based sorting using SQL window functions
+   - **Implementation**: Added subquery to get latest price snapshot per card with `row_number()` window function
+   - **Price Join**: Uses `outerjoin` with latest prices subquery to sort by actual `ungraded_cents` and `psa10_cents` values
+   - **Null Handling**: Implemented `nulls_last()` to put cards without pricing data at the end regardless of sort direction
+
+3. **✅ TECHNICAL DETAILS**:
+   - **Window Function**: Uses `func.row_number().over(partition_by=card_id, order_by=as_of_date.desc())` to get latest prices
+   - **Subquery Optimization**: Creates efficient subquery that filters to only latest price snapshot per card (`rn = 1`)
+   - **Query Rebuilding**: For price sorts, rebuilds query with price join and re-applies all filters
+   - **Sort Direction**: Properly handles both ascending and descending sorts with null value handling
+
+4. **✅ RESULT**:
+   - **Numerical Sorting**: Price columns now sort by actual dollar amounts (e.g., $10.42 < $22.86 < $25.75)
+   - **Performance**: Efficient SQL query with proper indexing on `card_id` and `as_of_date`
+   - **User Experience**: Sorting by price columns now works as expected with proper numerical ordering
+   - **Backward Compatibility**: All other column sorting remains unchanged and functional
+
 **🚨 DOCKER DEPLOYMENT ISSUES IDENTIFIED (August 14, 2025)**:
 
 ### **CRITICAL DEPLOYMENT PROBLEMS**:
@@ -424,6 +450,12 @@
    - **Result**: Users can change conditions directly from card details with immediate sync
 
 ## Recent Changes (August 14, 2025)
+### Git Repository Configuration Completed
+- **✅ .gitignore Created**: Comprehensive .gitignore file created for Python project
+- **✅ Data Directory Removed**: Removed data/ directory from git tracking (contains logs and database)
+- **✅ Version Control Cleanup**: Database files and logs no longer tracked by git
+- **✅ Local Files Preserved**: Data directory still exists locally but ignored by git
+
 ### Docker Deployment Issues Identified
 - **❌ Log Directory Creation**: Application fails to start because `/data/logs/` directory doesn't exist
 - **❌ Database Access**: SQLite cannot access database file, likely permission/directory issues
