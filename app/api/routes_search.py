@@ -227,6 +227,146 @@ async def search_cards(
         )
 
 
+@router.post("/preview-card", response_class=HTMLResponse)
+async def preview_card(
+    request: Request,
+    session: Session = Depends(get_session)
+):
+    """Preview a card from search results with full details before adding to collection."""
+    try:
+        # Get form data
+        form_data = await request.form()
+        pc_url = form_data.get("pc_url", "").strip()
+        name = form_data.get("name", "").strip()
+        set_name = form_data.get("set_name", "").strip()
+        number = form_data.get("number", "").strip()
+        image_url = form_data.get("image_url", "").strip()
+        
+        request_id = getattr(request.state, "request_id", None)
+        
+        logger.info(
+            "preview_card_start",
+            pc_url=pc_url,
+            name=name,
+            set_name=set_name,
+            number=number,
+            request_id=request_id
+        )
+        
+        if not pc_url or not name:
+            raise HTTPException(
+                status_code=400,
+                detail="PriceCharting URL and card name are required"
+            )
+        
+        # Extract product ID from URL for reference
+        pc_product_id = None
+        if pc_url:
+            if "product=" in pc_url:
+                product_match = re.search(r'product=(\d+)', pc_url)
+                if product_match:
+                    pc_product_id = product_match.group(1)
+            else:
+                pc_product_id = pc_url.split("/")[-1]
+        
+        # Scrape the PriceCharting product page for full details
+        pricing_data = None
+        metadata = {}
+        game_url = pc_url
+        
+        if pricecharting_scraper.is_available():
+            try:
+                scrape_result = await pricecharting_scraper.scrape_product_page_with_url(pc_url, request)
+                
+                if scrape_result:
+                    pricing_data = scrape_result.get("pricing_data")
+                    metadata = scrape_result.get("metadata", {})
+                    game_url = scrape_result.get("final_url", pc_url)
+                    
+                    logger.info(
+                        "preview_scrape_complete",
+                        name=name,
+                        pc_product_id=pc_product_id,
+                        prices_found=bool(pricing_data),
+                        metadata_found=bool(metadata),
+                        request_id=request_id
+                    )
+                else:
+                    logger.warning(
+                        "preview_scrape_empty",
+                        pc_url=pc_url,
+                        request_id=request_id
+                    )
+            
+            except Exception as e:
+                logger.warning(
+                    "preview_scrape_failed",
+                    pc_url=pc_url,
+                    error=str(e),
+                    request_id=request_id
+                )
+        
+        # Parse rarity and variant from metadata
+        rarity = ""
+        variant = ""
+        if metadata.get("notes"):
+            rarity, variant = _parse_rarity_and_variant(metadata["notes"])
+        
+        # Create a temporary card object for preview (not saved to database)
+        preview_card = {
+            "name": name,
+            "set_name": set_name,
+            "number": number or metadata.get("card_number", ""),
+            "rarity": rarity,
+            "image_small": image_url,
+            "image_large": image_url,
+            "pc_url": game_url,
+            "tcgplayer_url": metadata.get("tcgplayer_url"),
+            "notes": metadata.get("notes", ""),
+            "variant": variant
+        }
+        
+        # Create pricing info for display
+        latest_price = None
+        if pricing_data:
+            latest_price = {
+                "ungraded_cents": pricing_data.get("ungraded_cents"),
+                "psa9_cents": pricing_data.get("psa9_cents"),
+                "psa10_cents": pricing_data.get("psa10_cents"),
+                "bgs10_cents": pricing_data.get("bgs10_cents"),
+                "as_of_date": datetime.utcnow().date()
+            }
+        
+        # Return preview modal with card details and add/cancel options
+        return templates.TemplateResponse(
+            "_card_preview.html",
+            {
+                "request": request,
+                "card": preview_card,
+                "latest_price": latest_price,
+                "pc_url": pc_url,  # Original URL for adding to collection
+                "image_url": image_url,
+                "has_pricing": bool(pricing_data)
+            }
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(
+            "preview_card_error",
+            pc_url=pc_url if 'pc_url' in locals() else "unknown",
+            error=str(e),
+            request_id=getattr(request.state, "request_id", None),
+            exc_info=True
+        )
+        
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to preview card details"
+        )
+
+
 @router.post("/select-card", response_class=HTMLResponse)
 async def select_card(
     request: Request,

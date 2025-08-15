@@ -1,6 +1,57 @@
 # Active Context - Pokémon Card Cataloguer
 
 ## Current Focus/Issues
+**✅ CARD PREVIEW BEFORE ADDING TO COLLECTION IMPLEMENTED (August 15, 2025)**:
+
+### **ENHANCED USER WORKFLOW WITH DUAL OPTIONS**:
+1. **✅ PREVIEW ENDPOINT CREATED**: New `/api/preview-card` endpoint that scrapes full card details without adding to collection
+   - **Full PriceCharting Scraping**: Gets complete pricing data, metadata, TCGPlayer info, and notes
+   - **Rarity/Variant Parsing**: Extracts and displays rarity and variant information from PriceCharting notes
+   - **No Database Changes**: Preview doesn't create any database entries until user confirms
+
+2. **✅ LARGE PREVIEW MODAL**: Enhanced `_card_preview.html` template with detailed card information
+   - **Larger Size**: Modal now uses `max-w-7xl` and `max-h-[90vh]` with scroll for better viewing
+   - **Left Column**: High-quality card image, basic info (name, set, number), rarity/variant badges, notes, external links
+   - **Right Column**: Complete pricing breakdown (Ungraded, PSA 9, PSA 10, BGS 10), add/cancel action buttons
+   - **No Scrolling Issues**: Properly sized to fit most screens without requiring scroll to see action buttons
+
+3. **✅ DUAL BUTTON SEARCH FLOW**: Updated search results to provide both options
+   - **"Add Directly" Button**: Green button for immediate addition when user is confident
+   - **"Preview Card" Button**: Blue button with eye icon for detailed review before adding
+   - **User Choice**: Users can choose their preferred workflow based on confidence level
+   - **HTMX Integration**: Seamless transitions for both direct add and preview workflows
+
+4. **✅ FLEXIBLE USER EXPERIENCE**: Accommodates different user preferences
+   - **Quick Add**: "Add Directly" for users who know exactly what they want
+   - **Careful Review**: "Preview Card" for users who want to verify details first
+   - **Full Information**: Preview shows complete card details, pricing, rarity, and metadata
+   - **Easy Navigation**: Cancel button returns to search results, maintaining workflow continuity
+
+### **TECHNICAL IMPLEMENTATION DETAILS**:
+1. **Preview Endpoint** (`/api/preview-card`):
+   - Scrapes PriceCharting product page for complete details
+   - Parses rarity and variant from notes field
+   - Creates temporary card object for display (not saved to database)
+   - Returns preview modal with all available information
+
+2. **Preview Template** (`_card_preview.html`):
+   - Two-column responsive layout with card image and pricing
+   - Displays rarity, variant, notes, and external links
+   - Action buttons for add/cancel with proper HTMX integration
+   - JavaScript function to return to search results
+
+3. **Search Modal Updates** (`_search_modal.html`):
+   - Changed button text from "Select & Add" to "Preview Card"
+   - Updated button styling to blue (preview) vs green (direct add)
+   - Added eye icon to preview button for visual clarity
+
+### **USER EXPERIENCE IMPROVEMENTS**:
+- **Informed Decisions**: Users can verify card details, rarity, and pricing before adding
+- **Mistake Prevention**: Reduces accidental additions of wrong card variants
+- **Complete Information**: Shows all available metadata from PriceCharting scraping
+- **Flexible Workflow**: Users can cancel and return to search results easily
+- **Visual Clarity**: Clear distinction between preview and add actions
+
 **✅ COLLECTION SUMMARY DASHBOARD IMPLEMENTED (August 15, 2025)**:
 
 ### **BEAUTIFUL COLLECTION OVERVIEW WITH TAILWIND UI**:

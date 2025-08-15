@@ -102,8 +102,8 @@
                 </div>
                 {% endif %}
                 
-                <!-- Add Button -->
-                <div class="mt-3">
+                <!-- Add Buttons -->
+                <div class="mt-3 space-y-2">
                     {% if candidate.tcg_id %}
                     <button
                         hx-post="/api/collection"
@@ -111,12 +111,15 @@
                         hx-target="closest .border"
                         hx-swap="outerHTML"
                         hx-indicator="#global-loading"
-                        class="w-full bg-blue-600 text-white text-xs px-3 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                        class="w-full bg-green-600 text-white text-xs px-3 py-2 rounded-md hover:bg-green-700 transition-colors"
                     >
+                        <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
                         Add to Collection
                     </button>
                     {% else %}
-                    <!-- For PriceCharting-only results, we need a different flow -->
+                    <!-- For PriceCharting-only results, show both options -->
                     <button
                         hx-post="/api/select-card"
                         hx-vals='{"pc_url": "{{ candidate.pc_url or '' }}", "name": "{{ candidate.name }}", "set_name": "{{ candidate.set_name }}", "number": "{{ candidate.number or '' }}", "image_url": "{{ candidate.image_small or '' }}"}'
@@ -125,7 +128,24 @@
                         hx-indicator="#global-loading"
                         class="w-full bg-green-600 text-white text-xs px-3 py-2 rounded-md hover:bg-green-700 transition-colors"
                     >
-                        Select & Add
+                        <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Add Directly
+                    </button>
+                    <button
+                        hx-post="/api/preview-card"
+                        hx-vals='{"pc_url": "{{ candidate.pc_url or '' }}", "name": "{{ candidate.name }}", "set_name": "{{ candidate.set_name }}", "number": "{{ candidate.number or '' }}", "image_url": "{{ candidate.image_small or '' }}"}'
+                        hx-target="#search-results"
+                        hx-swap="innerHTML"
+                        hx-indicator="#global-loading"
+                        class="w-full bg-blue-600 text-white text-xs px-3 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                        <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                        Preview Card
                     </button>
                     {% endif %}
                 </div>
