@@ -690,6 +690,56 @@
    - **Automatic Updates**: During price refresh, system captures and stores game URLs
    - **Legacy Support**: Existing cards will get their game URLs populated during next refresh
 
+**✅ POSTER VIEW HOVER AND DETAILS SCREEN UX FIXES COMPLETED (August 15, 2025)**:
+
+### **POSTER VIEW HOVER OVERLAY ISSUE FIXED**:
+1. **✅ HOVER OVERLAY REPOSITIONED**:
+   - **Issue**: Overlay covered entire card including quantity buttons when hovering
+   - **Solution**: Moved `relative` positioning to image container only
+   - **Result**: Hover overlay now only covers the card image, leaving quantity controls accessible
+   - **User Experience**: Users can now adjust quantities even when hovering over cards
+
+### **DETAILS SCREEN QUANTITY CONTROLS ADDED**:
+1. **✅ INTERACTIVE QUANTITY CONTROLS IMPLEMENTED**:
+   - **Issue**: Quantity was displayed as static text in collection info section
+   - **Solution**: Added +/- buttons with HTMX integration matching poster view pattern
+   - **Features**: Blue-themed buttons, confirmation dialog for quantity reduction to 0
+   - **Integration**: Updates both details modal and collection table simultaneously
+   - **User Experience**: Users can now modify quantities directly from the details screen
+
+### **BEAUTIFUL RARITY BADGE STYLING COMPLETED**:
+1. **✅ GRADIENT RARITY BADGES IMPLEMENTED**:
+   - **Issue**: Rarity displayed in plain gray text
+   - **Solution**: Created beautiful gradient badges with rarity-specific colors
+   - **Color Mapping**: 
+     - Common: Gray gradient
+     - Uncommon: Green gradient  
+     - Rare: Blue gradient
+     - Rare Holo: Purple gradient with lightning icon
+     - Ultra Rare: Yellow-orange gradient with star icon
+     - Secret Rare: Pink-red gradient with star icon
+     - Special Illustration Rare: Multi-color gradient with star icon
+   - **Features**: Hover animations, shadows, uppercase text, appropriate icons
+   - **User Experience**: Visually stunning rarity identification with professional styling
+
+### **TECHNICAL IMPLEMENTATION DETAILS**:
+1. **Poster View Fix** (`_collection_poster.html`):
+   - Moved `relative` class from card container to image container
+   - Overlay now uses `absolute inset-0` only on image area
+   - Quantity controls remain outside hover area
+
+2. **Details Screen Enhancement** (`_collection_info_section.html`):
+   - Added quantity increment/decrement buttons with blue theme
+   - Implemented HTMX integration with proper swap targets
+   - Added confirmation dialog for quantity reduction to 0
+   - Maintains table refresh triggers for consistency
+
+3. **Rarity Badge Styling** (`_card_details.html`):
+   - Created comprehensive rarity style mapping dictionary
+   - Implemented gradient backgrounds with appropriate colors
+   - Added conditional icons (star for ultra rares, lightning for holos)
+   - Included hover animations and professional styling
+
 **✅ QUANTITY-TO-ZERO DELETION CONFIRMED WORKING (August 14, 2025)**:
 
 ### **QUANTITY CONTROL SYSTEM VERIFICATION**:
