@@ -15,6 +15,13 @@ class ConditionEnum(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
+class SchemaVersion(SQLModel, table=True):
+    """Track database schema version for migrations."""
+    version: int = Field(primary_key=True)
+    applied_at: datetime = Field(default_factory=datetime.utcnow)
+    description: str
+
+
 class Card(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     tcg_id: str = Field(unique=True, index=True)
@@ -153,6 +160,11 @@ class AppSettings(SQLModel, table=True):
     
     # Database Settings
     sql_echo: bool = Field(default=False)
+    
+    # Backup Settings
+    auto_backup_enabled: bool = Field(default=True)
+    backup_schedule: str = Field(default="daily")  # daily, weekly
+    backup_retention_days: int = Field(default=7)
     
     # Timestamps
     created_at: datetime = Field(default_factory=datetime.utcnow)

@@ -12,6 +12,8 @@ from app.db import get_db_session
 from app.models import JobHistory, AppSettings
 from app.services.pricing_refresh import pricing_refresh_service
 from app.services.metadata_refresh import metadata_refresh_service
+from app.services.backup_service import BackupService
+from app.services.export_service import ExportService
 from app.config import settings
 from app.schemas import AppSettingsResponse, UpdateAppSettingsRequest
 
@@ -764,5 +766,161 @@ async def get_metadata_stats(request: Request):
             {
                 "request": request,
                 **stats
+            }
+        )
+
+
+# Database backup and export endpoints
+@router.get("/backup", response_class=HTMLResponse)
+async def get_backup_settings(request: Request):
+    """Get database backup settings and status."""
+    
+    backup_service = BackupService()
+    
+    # Get database size
+    db_info = backup_service.get_database_size()
+    
+    # Get backup list
+    backups = backup_service.list_backups()
+    
+    # Get app settings for backup configuration
+    with get_db_session() as session:
+        app_settings = session.exec(select(AppSettings)).first()
+        if not app_settings:
+            app_settings = AppSettings()
+    
+    return templates.TemplateResponse(
+        "_backup_status.html",
+        {
+            "request": request,
+            "db_info": db_info,
+            "backups": backups[:10],  # Show last 10 backups
+            "total_backups": len(backups),
+            "auto_backup_enabled": app_settings.auto_backup_enabled,
+            "backup_schedule": app_settings.backup_schedule,
+            "backup_retention_days": app_settings.backup_retention_days
+        }
+    )
+
+
+@router.post("/backup/create", response_class=HTMLResponse)
+async def create_manual_backup(request: Request):
+    """Create a manual database backup."""
+    
+    try:
+        backup_service = BackupService()
+        backup_path = backup_service.create_backup(reason="manual")
+        
+        # Get updated backup list
+        backups = backup_service.list_backups()
+        db_info = backup_service.get_database_size()
+        
+        # Get app settings
+        with get_db_session() as session:
+            app_settings = session.exec(select(AppSettings)).first()
+            if not app_settings:
+                app_settings = AppSettings()
+        
+        return templates.TemplateResponse(
+            "_backup_status.html",
+            {
+                "request": request,
+                "db_info": db_info,
+                "backups": backups[:10],
+                "total_backups": len(backups),
+                "auto_backup_enabled": app_settings.auto_backup_enabled,
+                "backup_schedule": app_settings.backup_schedule,
+                "backup_retention_days": app_settings.backup_retention_days,
+                "success_message": f"Backup created successfully: {backup_path.split('/')[-1]}"
+            }
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create backup: {str(e)}"
+        )
+
+
+@router.post("/backup/cleanup", response_class=HTMLResponse)
+async def cleanup_old_backups(request: Request):
+    """Clean up old backups based on retention settings."""
+    
+    try:
+        backup_service = BackupService()
+        
+        # Get retention days from settings
+        with get_db_session() as session:
+            app_settings = session.exec(select(AppSettings)).first()
+            retention_days = app_settings.backup_retention_days if app_settings else 7
+        
+        removed_count = backup_service.cleanup_old_backups(retention_days)
+        
+        # Get updated backup list
+        backups = backup_service.list_backups()
+        db_info = backup_service.get_database_size()
+        
+        return templates.TemplateResponse(
+            "_backup_status.html",
+            {
+                "request": request,
+                "db_info": db_info,
+                "backups": backups[:10],
+                "total_backups": len(backups),
+                "auto_backup_enabled": app_settings.auto_backup_enabled,
+                "backup_schedule": app_settings.backup_schedule,
+                "backup_retention_days": app_settings.backup_retention_days,
+                "success_message": f"Cleaned up {removed_count} old backups"
+            }
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to cleanup backups: {str(e)}"
+        )
+
+
+@router.get("/export/csv")
+async def export_collection_csv():
+    """Export collection data to CSV file."""
+    
+    try:
+        export_service = ExportService()
+        return export_service.export_collection_csv()
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to export collection: {str(e)}"
+        )
+
+
+@router.get("/export/stats", response_class=HTMLResponse)
+async def get_export_stats(request: Request):
+    """Get export statistics."""
+    
+    try:
+        export_service = ExportService()
+        stats = export_service.get_export_stats()
+        
+        return templates.TemplateResponse(
+            "_export_stats.html",
+            {
+                "request": request,
+                **stats
+            }
+        )
+        
+    except Exception as e:
+        return templates.TemplateResponse(
+            "_export_stats.html",
+            {
+                "request": request,
+                "total_entries": 0,
+                "unique_cards": 0,
+                "entries_with_pricing": 0,
+                "pricing_coverage": 0,
+                "error": str(e)
             }
         )

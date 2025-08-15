@@ -32,6 +32,10 @@ chown -R $PUID:$PGID /data
 echo "Setting ownership of /app to $PUID:$PGID"
 chown -R $PUID:$PGID /app
 
+# Run database migrations
+echo "Running database migrations..."
+gosu $PUID:$PGID python -m migrations.migration_manager
+
 # Execute the command as the specified user
 echo "Executing command as UID $PUID, GID $PGID: $@"
 exec gosu $PUID:$PGID "$@"

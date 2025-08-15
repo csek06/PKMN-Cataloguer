@@ -136,3 +136,8 @@ class DatabaseSettings:
 
 
 settings = DatabaseSettings()
+
+
+def get_data_dir() -> str:
+    """Get the data directory path."""
+    return settings.data_dir

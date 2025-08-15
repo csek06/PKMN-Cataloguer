@@ -231,6 +231,45 @@
         </div>
     </div>
 
+    <!-- Database Backup & Export -->
+    <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl mb-8 border border-white/20 card-hover relative overflow-hidden">
+        <!-- Decorative elements -->
+        <div class="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full opacity-20 float-animation" style="animation-delay: 0.8s;"></div>
+        <div class="absolute -bottom-1 -left-1 w-6 h-6 bg-gradient-to-r from-green-400 to-blue-500 rounded-full opacity-15 float-animation" style="animation-delay: 1.8s;"></div>
+        
+        <div class="px-8 py-6 border-b border-gray-200/50">
+            <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+                <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mr-4 shadow-lg">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 1.79 4 4 4h8c0-2.21-1.79-4-4-4H8c-2.21 0-4-1.79-4-4zm0 0V4c0-1.1.9-2 2-2h4c1.1 0 2 .9 2 2v3M4 7h16"></path>
+                    </svg>
+                </div>
+                Database Backup & Export
+            </h2>
+        </div>
+        <div class="p-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Backup Section -->
+                <div id="backup-section" hx-get="/api/settings/backup" hx-trigger="load once">
+                    <div class="flex justify-center py-8">
+                        <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full flex items-center justify-center pulse-glow">
+                            <div class="spinner border-white border-t-transparent w-6 h-6"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Export Section -->
+                <div id="export-section" hx-get="/api/settings/export/stats" hx-trigger="load once">
+                    <div class="flex justify-center py-8">
+                        <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center pulse-glow">
+                            <div class="spinner border-white border-t-transparent w-6 h-6"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Job History -->
     <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl mb-8 border border-white/20 card-hover relative overflow-hidden">
         <!-- Decorative elements -->
