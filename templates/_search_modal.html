@@ -1,42 +1,54 @@
 <!-- Search Method Indicator -->
 {% if search_method %}
-<div class="mb-4 flex items-center justify-between">
-    <div class="flex items-center space-x-2">
+<div class="mb-6 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
         {% if search_method == "pricecharting" %}
-        <div class="flex items-center space-x-1 text-xs text-green-600">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-            </svg>
-            <span>Fast PriceCharting Search</span>
+        <div class="flex items-center space-x-2 text-sm bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 px-4 py-2 rounded-xl border border-green-200">
+            <div class="w-6 h-6 bg-gradient-to-r from-green-400 to-emerald-500 rounded-lg flex items-center justify-center">
+                <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+            </div>
+            <span class="font-medium">Fast PriceCharting Search</span>
         </div>
         {% elif search_method == "tcg_api" %}
-        <div class="flex items-center space-x-1 text-xs text-blue-600">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-            </svg>
-            <span>TCG API Fallback</span>
+        <div class="flex items-center space-x-2 text-sm bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 px-4 py-2 rounded-xl border border-blue-200">
+            <div class="w-6 h-6 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-lg flex items-center justify-center">
+                <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                </svg>
+            </div>
+            <span class="font-medium">TCG API Fallback</span>
         </div>
         {% endif %}
     </div>
-    <span class="text-xs text-gray-500">{{ candidates|length }} results</span>
+    <div class="bg-gradient-to-r from-gray-100 to-gray-200 px-4 py-2 rounded-xl">
+        <span class="text-sm font-medium text-gray-700">{{ candidates|length }} results</span>
+    </div>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for candidate in candidates %}
-    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+    <div class="bg-white/90 backdrop-blur-sm border-2 border-gray-200 rounded-2xl p-6 hover:shadow-xl hover:border-blue-300 transition-all duration-300 card-hover relative overflow-hidden">
+        <!-- Decorative gradient overlay -->
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-400"></div>
+        
         <div class="flex space-x-4">
             <!-- Card Image -->
             <div class="flex-shrink-0">
                 {% if candidate.image_small %}
-                <img 
-                    src="{{ candidate.image_small }}" 
-                    alt="{{ candidate.name }}"
-                    class="w-16 h-22 object-cover rounded-md"
-                    loading="lazy"
-                >
+                <div class="relative group">
+                    <img 
+                        src="{{ candidate.image_small }}" 
+                        alt="{{ candidate.name }}"
+                        class="w-20 h-28 object-cover rounded-xl shadow-lg group-hover:shadow-xl transition-shadow duration-300"
+                        loading="lazy"
+                    >
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
                 {% else %}
-                <div class="w-16 h-22 bg-gray-200 rounded-md flex items-center justify-center">
-                    <svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <div class="w-20 h-28 bg-gradient-to-br from-gray-200 to-gray-300 rounded-xl flex items-center justify-center shadow-lg">
+                    <svg class="w-10 h-10 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
                     </svg>
                 </div>
@@ -45,19 +57,29 @@
             
             <!-- Card Info -->
             <div class="flex-1 min-w-0">
-                <h3 class="text-sm font-medium text-gray-900 truncate">
+                <h3 class="text-lg font-bold text-gray-900 truncate mb-1">
                     {{ candidate.name }}
                 </h3>
-                <p class="text-xs text-gray-500 mt-1">
+                <p class="text-sm text-gray-600 mb-3 flex items-center">
+                    <svg class="w-4 h-4 mr-1 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
                     {{ candidate.set_name }}
                 </p>
+                
                 {% if candidate.number %}
-                <div class="flex items-center space-x-2 mt-1">
-                    <span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">
+                <div class="flex items-center space-x-2 mb-3">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border border-blue-300">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
+                        </svg>
                         #{{ candidate.number }}
                     </span>
                     {% if candidate.rarity %}
-                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300">
+                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                        </svg>
                         {{ candidate.rarity }}
                     </span>
                     {% endif %}
@@ -66,57 +88,71 @@
                 
                 <!-- Enhanced Pricing Display -->
                 {% if has_pricing and (candidate.ungraded_price_cents or candidate.psa9_price_cents or candidate.psa10_price_cents) %}
-                <div class="mt-2 space-y-1">
-                    {% if candidate.ungraded_price_cents %}
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs text-gray-600">Ungraded:</span>
-                        <span class="text-sm font-medium text-green-600">
-                            ${{ "%.2f"|format(candidate.ungraded_price_cents / 100) }}
-                        </span>
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-3 mb-4 border border-green-200">
+                    <div class="space-y-2">
+                        {% if candidate.ungraded_price_cents %}
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-medium text-green-700 flex items-center">
+                                <div class="w-3 h-3 bg-green-400 rounded-full mr-2"></div>
+                                Ungraded:
+                            </span>
+                            <span class="text-sm font-bold text-green-800">
+                                ${{ "%.2f"|format(candidate.ungraded_price_cents / 100) }}
+                            </span>
+                        </div>
+                        {% endif %}
+                        {% if candidate.psa9_price_cents %}
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-medium text-blue-700 flex items-center">
+                                <div class="w-3 h-3 bg-blue-400 rounded-full mr-2"></div>
+                                PSA 9:
+                            </span>
+                            <span class="text-sm font-bold text-blue-800">
+                                ${{ "%.2f"|format(candidate.psa9_price_cents / 100) }}
+                            </span>
+                        </div>
+                        {% endif %}
+                        {% if candidate.psa10_price_cents %}
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-medium text-purple-700 flex items-center">
+                                <div class="w-3 h-3 bg-purple-400 rounded-full mr-2"></div>
+                                PSA 10:
+                            </span>
+                            <span class="text-sm font-bold text-purple-800">
+                                ${{ "%.2f"|format(candidate.psa10_price_cents / 100) }}
+                            </span>
+                        </div>
+                        {% endif %}
+                        {% if candidate.bgs10_price_cents %}
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-medium text-indigo-700 flex items-center">
+                                <div class="w-3 h-3 bg-indigo-400 rounded-full mr-2"></div>
+                                BGS 10:
+                            </span>
+                            <span class="text-sm font-bold text-indigo-800">
+                                ${{ "%.2f"|format(candidate.bgs10_price_cents / 100) }}
+                            </span>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
-                    {% if candidate.psa9_price_cents %}
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs text-gray-600">PSA 9:</span>
-                        <span class="text-sm font-medium text-blue-600">
-                            ${{ "%.2f"|format(candidate.psa9_price_cents / 100) }}
-                        </span>
-                    </div>
-                    {% endif %}
-                    {% if candidate.psa10_price_cents %}
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs text-gray-600">PSA 10:</span>
-                        <span class="text-sm font-medium text-purple-600">
-                            ${{ "%.2f"|format(candidate.psa10_price_cents / 100) }}
-                        </span>
-                    </div>
-                    {% endif %}
-                    {% if candidate.bgs10_price_cents %}
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs text-gray-600">BGS 10:</span>
-                        <span class="text-sm font-medium text-indigo-600">
-                            ${{ "%.2f"|format(candidate.bgs10_price_cents / 100) }}
-                        </span>
-                    </div>
-                    {% endif %}
                 </div>
                 {% endif %}
                 
                 <!-- Add Buttons -->
-                <div class="mt-3 space-y-2">
+                <div class="space-y-3">
                     {% if candidate.tcg_id %}
                     <button
                         hx-post="/api/collection"
                         hx-vals='{"tcg_id": "{{ candidate.tcg_id }}", "pc_product_id": "{{ candidate.pc_product_id or '' }}"}'
-                        hx-target="closest .border"
+                        hx-target="closest .bg-white"
                         hx-swap="outerHTML"
                         hx-indicator="#global-loading"
-                        class="w-full bg-green-600 text-white text-xs px-3 py-2 rounded-md hover:bg-green-700 transition-colors"
+                        class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all duration-200 transform hover:scale-105 hover:shadow-lg flex items-center justify-center space-x-2"
                     >
-                        <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
-                        Add to Collection
+                        <span>Add to Collection</span>
                     </button>
                     {% else %}
                     <!-- For PriceCharting-only results, show both options -->
@@ -126,12 +162,12 @@
                         hx-target="#search-results"
                         hx-swap="innerHTML"
                         hx-indicator="#global-loading"
-                        class="w-full bg-green-600 text-white text-xs px-3 py-2 rounded-md hover:bg-green-700 transition-colors"
+                        class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all duration-200 transform hover:scale-105 hover:shadow-lg flex items-center justify-center space-x-2"
                     >
-                        <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
-                        Add Directly
+                        <span>Add Directly</span>
                     </button>
                     <button
                         hx-post="/api/preview-card"
@@ -139,13 +175,13 @@
                         hx-target="#search-results"
                         hx-swap="innerHTML"
                         hx-indicator="#global-loading"
-                        class="w-full bg-blue-600 text-white text-xs px-3 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                        class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all duration-200 transform hover:scale-105 hover:shadow-lg flex items-center justify-center space-x-2"
                     >
-                        <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                         </svg>
-                        Preview Card
+                        <span>Preview Card</span>
                     </button>
                     {% endif %}
                 </div>
@@ -156,55 +192,83 @@
 </div>
 
 {% if not has_pricing %}
-<div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
-    <div class="flex">
+<div class="mt-8 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl p-6 shadow-lg">
+    <div class="flex items-start space-x-4">
         <div class="flex-shrink-0">
-            <svg class="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-            </svg>
+            <div class="w-12 h-12 bg-gradient-to-r from-amber-400 to-orange-500 rounded-xl flex items-center justify-center">
+                <svg class="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+            </div>
         </div>
-        <div class="ml-3">
-            <p class="text-sm text-amber-700">
-                <a href="/settings" class="font-medium underline hover:text-amber-800">
-                    Connect PriceCharting in Settings
-                </a> to see pricing information for search results.
+        <div>
+            <h3 class="text-lg font-bold text-amber-800 mb-2">Pricing Information Unavailable</h3>
+            <p class="text-sm text-amber-700 mb-4">
+                Connect PriceCharting in Settings to see pricing information for search results and unlock market value insights.
             </p>
+            <a href="/settings" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 hover:shadow-lg">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                Go to Settings
+            </a>
         </div>
     </div>
 </div>
 {% endif %}
 
 {% elif error %}
-<div class="text-center py-8">
-    <svg class="mx-auto h-12 w-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-    </svg>
-    <h3 class="mt-2 text-sm font-medium text-red-900">Search Error</h3>
-    <p class="mt-1 text-sm text-red-600">
-        {{ error }}
-    </p>
-    <div class="mt-4">
+<div class="text-center py-12">
+    <div class="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-red-200 max-w-md mx-auto">
+        <div class="w-16 h-16 bg-gradient-to-r from-red-400 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+        </div>
+        <h3 class="text-xl font-bold text-red-900 mb-2">Search Error</h3>
+        <p class="text-sm text-red-700 mb-6">
+            {{ error }}
+        </p>
         <button 
             onclick="closeSearchModal()" 
-            class="bg-red-600 text-white px-4 py-2 rounded-md text-sm hover:bg-red-700 transition-colors"
+            class="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white px-6 py-3 rounded-xl text-sm font-bold transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
         >
             Try Again
         </button>
     </div>
 </div>
 {% else %}
-<div class="text-center py-8">
-    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.29.82-5.877 2.172M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.875a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0z"></path>
-    </svg>
-    <h3 class="mt-2 text-sm font-medium text-gray-900">No cards found</h3>
-    <p class="mt-1 text-sm text-gray-500">
-        Try adjusting your search query. Examples:
-    </p>
-    <div class="mt-2 text-xs text-gray-400 space-y-1">
-        <div>"charizard base 4/102"</div>
-        <div>"pikachu 25th anniversary"</div>
-        <div>"mew ex 151"</div>
+<div class="text-center py-12">
+    <div class="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-gray-200 max-w-md mx-auto">
+        <div class="w-16 h-16 bg-gradient-to-r from-gray-400 to-gray-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.29.82-5.877 2.172M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.875a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0z"></path>
+            </svg>
+        </div>
+        <h3 class="text-xl font-bold text-gray-900 mb-2">No cards found</h3>
+        <p class="text-sm text-gray-600 mb-4">
+            Try adjusting your search query. Here are some examples:
+        </p>
+        <div class="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-4 space-y-2 text-sm text-gray-700">
+            <div class="flex items-center space-x-2">
+                <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+                <span class="font-mono">"charizard base 4/102"</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <div class="w-2 h-2 bg-purple-400 rounded-full"></div>
+                <span class="font-mono">"pikachu 25th anniversary"</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <div class="w-2 h-2 bg-pink-400 rounded-full"></div>
+                <span class="font-mono">"mew ex 151"</span>
+            </div>
+        </div>
+        <div class="flex justify-center space-x-1 mt-6">
+            <div class="w-2 h-2 bg-blue-400 rounded-full sparkle"></div>
+            <div class="w-2 h-2 bg-purple-400 rounded-full sparkle" style="animation-delay: 0.2s;"></div>
+            <div class="w-2 h-2 bg-pink-400 rounded-full sparkle" style="animation-delay: 0.4s;"></div>
+        </div>
     </div>
 </div>
 {% endif %}
