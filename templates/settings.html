@@ -82,6 +82,26 @@
         </div>
     </div>
 
+    <!-- Metadata Refresh Settings -->
+    <div class="bg-white rounded-lg shadow-sm mb-6">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                </svg>
+                Metadata Refresh Settings
+            </h2>
+        </div>
+        <div class="p-6">
+            <!-- Status Section -->
+            <div id="metadata-status" hx-get="/api/settings/metadata" hx-trigger="load once">
+                <div class="flex justify-center">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Statistics -->
     <div class="bg-white rounded-lg shadow-sm mb-6">
         <div class="px-6 py-4 border-b border-gray-200">
@@ -93,9 +113,47 @@
             </h2>
         </div>
         <div class="p-6">
-            <div id="pricing-stats" hx-get="/api/settings/pricing/stats" hx-trigger="load once">
-                <div class="flex justify-center">
-                    <div class="spinner"></div>
+            <!-- Tab Navigation -->
+            <div class="border-b border-gray-200 mb-6">
+                <nav class="-mb-px flex space-x-8">
+                    <button 
+                        id="pricing-stats-tab"
+                        class="whitespace-nowrap py-2 px-1 border-b-2 border-green-500 font-medium text-sm text-green-600"
+                        onclick="showStatsTab('pricing')"
+                    >
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        </svg>
+                        Pricing Jobs
+                    </button>
+                    <button 
+                        id="metadata-stats-tab"
+                        class="whitespace-nowrap py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        onclick="showStatsTab('metadata')"
+                    >
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                        </svg>
+                        Metadata Jobs
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Pricing Stats -->
+            <div id="pricing-stats-content">
+                <div id="pricing-stats" hx-get="/api/settings/pricing/stats" hx-trigger="load once">
+                    <div class="flex justify-center">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metadata Stats -->
+            <div id="metadata-stats-content" class="hidden">
+                <div id="metadata-stats" hx-get="/api/settings/metadata/stats" hx-trigger="load once">
+                    <div class="flex justify-center">
+                        <div class="spinner"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -112,9 +170,47 @@
             </h2>
         </div>
         <div class="p-6">
-            <div id="job-history" hx-get="/api/settings/pricing/history" hx-trigger="load">
-                <div class="flex justify-center">
-                    <div class="spinner"></div>
+            <!-- Tab Navigation -->
+            <div class="border-b border-gray-200 mb-6">
+                <nav class="-mb-px flex space-x-8">
+                    <button 
+                        id="pricing-history-tab"
+                        class="whitespace-nowrap py-2 px-1 border-b-2 border-green-500 font-medium text-sm text-green-600"
+                        onclick="showHistoryTab('pricing')"
+                    >
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        </svg>
+                        Pricing Jobs (Last 10)
+                    </button>
+                    <button 
+                        id="metadata-history-tab"
+                        class="whitespace-nowrap py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        onclick="showHistoryTab('metadata')"
+                    >
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                        </svg>
+                        Metadata Jobs (Last 10)
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Pricing History -->
+            <div id="pricing-history-content">
+                <div id="pricing-job-history" hx-get="/api/settings/pricing/history?limit=10" hx-trigger="load once">
+                    <div class="flex justify-center">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metadata History -->
+            <div id="metadata-history-content" class="hidden">
+                <div id="metadata-job-history" hx-get="/api/settings/metadata/history?limit=10" hx-trigger="load once">
+                    <div class="flex justify-center">
+                        <div class="spinner"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -162,6 +258,47 @@ function updateSettingsDisplay() {
                 <div><span class="font-medium">Scheduler:</span> ${statusData.scheduler_running ? 'Running' : 'Stopped'}</div>
             </div>
         `;
+    }
+}
+
+// Tab switching functions
+function showStatsTab(type) {
+    // Update tab buttons
+    const pricingTab = document.getElementById('pricing-stats-tab');
+    const metadataTab = document.getElementById('metadata-stats-tab');
+    
+    if (type === 'pricing') {
+        pricingTab.className = 'whitespace-nowrap py-2 px-1 border-b-2 border-green-500 font-medium text-sm text-green-600';
+        metadataTab.className = 'whitespace-nowrap py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
+        
+        document.getElementById('pricing-stats-content').classList.remove('hidden');
+        document.getElementById('metadata-stats-content').classList.add('hidden');
+    } else {
+        pricingTab.className = 'whitespace-nowrap py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
+        metadataTab.className = 'whitespace-nowrap py-2 px-1 border-b-2 border-purple-500 font-medium text-sm text-purple-600';
+        
+        document.getElementById('pricing-stats-content').classList.add('hidden');
+        document.getElementById('metadata-stats-content').classList.remove('hidden');
+    }
+}
+
+function showHistoryTab(type) {
+    // Update tab buttons
+    const pricingTab = document.getElementById('pricing-history-tab');
+    const metadataTab = document.getElementById('metadata-history-tab');
+    
+    if (type === 'pricing') {
+        pricingTab.className = 'whitespace-nowrap py-2 px-1 border-b-2 border-green-500 font-medium text-sm text-green-600';
+        metadataTab.className = 'whitespace-nowrap py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
+        
+        document.getElementById('pricing-history-content').classList.remove('hidden');
+        document.getElementById('metadata-history-content').classList.add('hidden');
+    } else {
+        pricingTab.className = 'whitespace-nowrap py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
+        metadataTab.className = 'whitespace-nowrap py-2 px-1 border-b-2 border-purple-500 font-medium text-sm text-purple-600';
+        
+        document.getElementById('pricing-history-content').classList.add('hidden');
+        document.getElementById('metadata-history-content').classList.remove('hidden');
     }
 }
 </script>

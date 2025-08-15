@@ -1,5 +1,5 @@
 {% if results %}
-<div class="overflow-x-auto">
+<div class="overflow-x-auto" id="collection-table" hx-trigger="refresh-table from:body" hx-get="/api/collection" hx-target="#collection-table" hx-swap="outerHTML" hx-include="[name='name'], [name='set_name'], [name='condition'], [name='sort'], [name='direction'], [name='page']">
     <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
             <tr>

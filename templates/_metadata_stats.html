@@ -1,0 +1,115 @@
+<div id="metadata-stats">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Total Jobs -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <dt class="text-sm font-medium text-gray-500">Total Metadata Jobs</dt>
+                    <dd class="text-2xl font-bold text-gray-900">{{ total_jobs }}</dd>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Rate -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    {% if success_rate >= 90 %}
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    {% elif success_rate >= 70 %}
+                    <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                    {% else %}
+                    <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    {% endif %}
+                </div>
+                <div class="ml-4">
+                    <dt class="text-sm font-medium text-gray-500">Success Rate</dt>
+                    <dd class="text-2xl font-bold text-gray-900">{{ success_rate }}%</dd>
+                </div>
+            </div>
+        </div>
+
+        <!-- Average Duration -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <dt class="text-sm font-medium text-gray-500">Avg Duration</dt>
+                    <dd class="text-2xl font-bold text-gray-900">
+                        {% if avg_duration_ms > 0 %}
+                        {{ "%.1f"|format(avg_duration_ms / 1000) }}s
+                        {% else %}
+                        --
+                        {% endif %}
+                    </dd>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Stats -->
+    <div class="mt-6 bg-white border border-gray-200 rounded-lg p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Metadata Processing Statistics</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="text-center">
+                <dt class="text-sm font-medium text-gray-500">Cards Processed</dt>
+                <dd class="mt-1 text-3xl font-bold text-blue-600">{{ total_cards_processed }}</dd>
+                <p class="text-xs text-gray-400 mt-1">Total cards analyzed</p>
+            </div>
+            
+            <div class="text-center">
+                <dt class="text-sm font-medium text-gray-500">Successfully Updated</dt>
+                <dd class="mt-1 text-3xl font-bold text-green-600">{{ total_cards_succeeded }}</dd>
+                <p class="text-xs text-gray-400 mt-1">Cards with new metadata</p>
+            </div>
+            
+            <div class="text-center">
+                <dt class="text-sm font-medium text-gray-500">Failed Updates</dt>
+                <dd class="mt-1 text-3xl font-bold text-red-600">{{ total_cards_failed }}</dd>
+                <p class="text-xs text-gray-400 mt-1">Cards that couldn't be updated</p>
+            </div>
+        </div>
+
+        {% if total_cards_processed > 0 %}
+        <div class="mt-6">
+            <div class="flex justify-between text-sm text-gray-600 mb-2">
+                <span>Processing Success Rate</span>
+                <span>{{ "%.1f"|format((total_cards_succeeded / total_cards_processed) * 100) }}%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3">
+                <div class="bg-gradient-to-r from-green-400 to-green-600 h-3 rounded-full transition-all duration-300" 
+                     style="width: {{ (total_cards_succeeded / total_cards_processed) * 100 }}%"></div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Info Box -->
+    <div class="mt-6 bg-purple-50 border border-purple-200 rounded-lg p-4">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-purple-400 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+            </svg>
+            <div class="text-sm text-purple-800">
+                <p class="font-medium mb-1">About Metadata Refresh</p>
+                <p>The metadata refresh service fetches comprehensive card information from the Pokémon TCG API, including HP, types, abilities, attacks, and high-quality images. This data complements the pricing information from PriceCharting to provide complete card details.</p>
+            </div>
+        </div>
+    </div>
+</div>

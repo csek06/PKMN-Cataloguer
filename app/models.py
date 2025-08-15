@@ -31,6 +31,37 @@ class Card(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     
+    # Pokémon TCG API fields
+    api_id: Optional[str] = Field(default=None, index=True)  # e.g., "sm4-57", "xy1-1"
+    api_last_synced_at: Optional[datetime] = None
+    
+    # Card stats and metadata
+    hp: Optional[int] = None
+    types: Optional[List[str]] = Field(default=None, sa_column=Column(JSON))
+    retreat_cost: Optional[int] = None
+    
+    # Card abilities and attacks
+    abilities: Optional[List[dict]] = Field(default=None, sa_column=Column(JSON))
+    attacks: Optional[List[dict]] = Field(default=None, sa_column=Column(JSON))
+    weaknesses: Optional[List[dict]] = Field(default=None, sa_column=Column(JSON))
+    resistances: Optional[List[dict]] = Field(default=None, sa_column=Column(JSON))
+    
+    # High-quality images from API
+    api_image_small: Optional[str] = None
+    api_image_large: Optional[str] = None
+    
+    # Additional metadata
+    artist: Optional[str] = None
+    flavor_text: Optional[str] = None
+    national_pokedex_numbers: Optional[List[int]] = Field(default=None, sa_column=Column(JSON))
+    evolves_from: Optional[str] = None
+    evolves_to: Optional[List[str]] = Field(default=None, sa_column=Column(JSON))
+    
+    # Market and legality info
+    legalities: Optional[dict] = Field(default=None, sa_column=Column(JSON))
+    tcg_player_id: Optional[int] = None
+    cardmarket_id: Optional[int] = None
+    
     # Relationships
     collection_entries: List["CollectionEntry"] = Relationship(back_populates="card")
     price_snapshots: List["PriceSnapshot"] = Relationship(back_populates="card")

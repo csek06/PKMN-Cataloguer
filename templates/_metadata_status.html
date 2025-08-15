@@ -1,0 +1,367 @@
+<div id="metadata-status">
+    <!-- Current Status -->
+    <div class="bg-white border border-gray-200 rounded-lg p-4 mb-4">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-lg font-medium text-gray-900">Metadata Refresh Status</h3>
+            <div class="flex items-center space-x-2">
+                {% if scheduler_running %}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                    Scheduler Active
+                </span>
+                {% else %}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                    </svg>
+                    Scheduler Inactive
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Next Scheduled Run</dt>
+                <dd class="mt-1 text-sm text-gray-900">
+                    {% if next_run %}
+                    {{ next_run | replace('T', ' ') | replace('Z', '') }} UTC
+                    {% else %}
+                    Not scheduled
+                    {% endif %}
+                </dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Batch Size</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ batch_size }} cards</dd>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Job Status -->
+    {% if current_job %}
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+        <div class="flex items-center mb-3">
+            <svg class="w-5 h-5 text-blue-400 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <h4 class="text-lg font-medium text-blue-900">Metadata Refresh Running</h4>
+        </div>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+                <dt class="font-medium text-blue-700">Processed</dt>
+                <dd class="text-blue-900">{{ current_job.processed }}</dd>
+            </div>
+            <div>
+                <dt class="font-medium text-green-700">Succeeded</dt>
+                <dd class="text-green-900">{{ current_job.succeeded }}</dd>
+            </div>
+            <div>
+                <dt class="font-medium text-red-700">Failed</dt>
+                <dd class="text-red-900">{{ current_job.failed }}</dd>
+            </div>
+            <div>
+                <dt class="font-medium text-blue-700">Started</dt>
+                <dd class="text-blue-900">{{ current_job.started_at.strftime('%H:%M:%S') }}</dd>
+            </div>
+        </div>
+        
+        <!-- Progress Bar -->
+        {% if current_job.processed > 0 %}
+        <div class="mt-4">
+            <div class="flex justify-between text-sm text-blue-700 mb-1">
+                <span>Progress</span>
+                <span>{{ current_job.processed }} cards</span>
+            </div>
+            <div class="w-full bg-blue-200 rounded-full h-2">
+                <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: {{ ((current_job.succeeded + current_job.failed) / current_job.processed * 100) if current_job.processed > 0 else 0 }}%"></div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Last Job Summary -->
+    {% if last_job and not current_job %}
+    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+        <h4 class="text-lg font-medium text-gray-900 mb-3">Last Metadata Refresh</h4>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+                <dt class="font-medium text-gray-500">Status</dt>
+                <dd class="mt-1">
+                    {% if last_job.status == 'completed' %}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Completed
+                    </span>
+                    {% elif last_job.status == 'completed_with_errors' %}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                        With Errors
+                    </span>
+                    {% elif last_job.status == 'failed' %}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        Failed
+                    </span>
+                    {% endif %}
+                </dd>
+            </div>
+            <div>
+                <dt class="font-medium text-gray-500">Processed</dt>
+                <dd class="mt-1 text-gray-900">{{ last_job.processed }}</dd>
+            </div>
+            <div>
+                <dt class="font-medium text-gray-500">Duration</dt>
+                <dd class="mt-1 text-gray-900">
+                    {% if last_job.duration_ms %}
+                    {{ "%.1f"|format(last_job.duration_ms / 1000) }}s
+                    {% else %}
+                    --
+                    {% endif %}
+                </dd>
+            </div>
+            <div>
+                <dt class="font-medium text-gray-500">Started</dt>
+                <dd class="mt-1 text-gray-900">{{ last_job.started_at.strftime('%m/%d %H:%M') }}</dd>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Manual Controls -->
+    <div class="bg-white border border-gray-200 rounded-lg p-4">
+        <h4 class="text-lg font-medium text-gray-900 mb-3">Manual Controls</h4>
+        <div class="flex space-x-3">
+            <button 
+                id="run-metadata-refresh-btn"
+                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                hx-post="/api/settings/metadata/run"
+                hx-target="#metadata-status"
+                hx-swap="outerHTML"
+                hx-confirm="Are you sure you want to run a manual metadata refresh? This will fetch card data from the Pokémon TCG API."
+                {% if current_job %}disabled{% endif %}
+            >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                {% if current_job %}
+                Metadata Refresh Running...
+                {% else %}
+                Run Metadata Refresh Now
+                {% endif %}
+            </button>
+            
+            <div class="text-sm text-gray-500 flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Fetches HP, types, abilities, and high-quality images from Pokémon TCG API
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Handle HTMX events for metadata refresh button
+document.addEventListener('htmx:beforeRequest', function(evt) {
+    if (evt.detail.elt.id === 'run-metadata-refresh-btn') {
+        evt.detail.elt.disabled = true;
+        evt.detail.elt.innerHTML = '<div class="spinner w-4 h-4 mr-2"></div>Starting Metadata Refresh...';
+    }
+});
+
+document.addEventListener('htmx:afterRequest', function(evt) {
+    if (evt.detail.elt.id === 'run-metadata-refresh-btn') {
+        // Button will be replaced by the response, so this may not execute
+        // But it's here for safety
+        evt.detail.elt.disabled = false;
+        evt.detail.elt.innerHTML = `
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Run Metadata Refresh Now
+        `;
+    }
+});
+
+// Server-Side Events for real-time metadata job updates
+let metadataEventSource = null;
+
+function startMetadataSSE() {
+    if (metadataEventSource) {
+        metadataEventSource.close();
+    }
+    
+    metadataEventSource = new EventSource('/api/settings/metadata/events');
+    
+    metadataEventSource.onmessage = function(event) {
+        try {
+            const data = JSON.parse(event.data);
+            
+            if (data.type === 'job_status') {
+                updateMetadataJobStatus(data.job, data.scheduler_running);
+                
+                // If job completed, refresh stats and history
+                if (data.job && (data.job.status === 'completed' || data.job.status === 'completed_with_errors' || data.job.status === 'failed')) {
+                    setTimeout(() => {
+                        // Refresh metadata stats if visible
+                        const metadataStatsContent = document.getElementById('metadata-stats-content');
+                        if (metadataStatsContent && !metadataStatsContent.classList.contains('hidden')) {
+                            htmx.trigger('#metadata-stats', 'refresh');
+                        }
+                        
+                        // Refresh metadata history if visible
+                        const metadataHistoryContent = document.getElementById('metadata-history-content');
+                        if (metadataHistoryContent && !metadataHistoryContent.classList.contains('hidden')) {
+                            htmx.trigger('#metadata-job-history', 'refresh');
+                        }
+                    }, 1000);
+                }
+            } else if (data.type === 'error') {
+                console.error('Metadata SSE error:', data.message);
+            }
+        } catch (e) {
+            console.error('Error parsing metadata SSE data:', e);
+        }
+    };
+    
+    metadataEventSource.onerror = function(event) {
+        console.error('Metadata SSE connection error:', event);
+        // Reconnect after 5 seconds
+        setTimeout(startMetadataSSE, 5000);
+    };
+}
+
+function updateMetadataJobStatus(job, schedulerRunning) {
+    const statusDiv = document.getElementById('metadata-status');
+    if (!statusDiv) return;
+    
+    // Update current job display
+    const currentJobDiv = statusDiv.querySelector('.bg-blue-50');
+    const lastJobDiv = statusDiv.querySelector('.bg-gray-50');
+    
+    if (job && job.status === 'running') {
+        // Show running job status
+        if (!currentJobDiv) {
+            // Create running job display
+            const runningJobHtml = `
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <div class="flex items-center mb-3">
+                        <svg class="w-5 h-5 text-blue-400 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <h4 class="text-lg font-medium text-blue-900">Metadata Refresh Running</h4>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                            <dt class="font-medium text-blue-700">Processed</dt>
+                            <dd class="text-blue-900" id="metadata-processed">${job.processed}</dd>
+                        </div>
+                        <div>
+                            <dt class="font-medium text-green-700">Succeeded</dt>
+                            <dd class="text-green-900" id="metadata-succeeded">${job.succeeded}</dd>
+                        </div>
+                        <div>
+                            <dt class="font-medium text-red-700">Failed</dt>
+                            <dd class="text-red-900" id="metadata-failed">${job.failed}</dd>
+                        </div>
+                        <div>
+                            <dt class="font-medium text-blue-700">Started</dt>
+                            <dd class="text-blue-900">${new Date(job.started_at).toLocaleTimeString()}</dd>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4" id="metadata-progress-section">
+                        <div class="flex justify-between text-sm text-blue-700 mb-1">
+                            <span>Progress</span>
+                            <span>${job.processed} cards</span>
+                        </div>
+                        <div class="w-full bg-blue-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: ${job.processed > 0 ? ((job.succeeded + job.failed) / job.processed * 100) : 0}%"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Insert after the status section
+            const statusSection = statusDiv.querySelector('.bg-white');
+            statusSection.insertAdjacentHTML('afterend', runningJobHtml);
+            
+            // Hide last job section if it exists
+            if (lastJobDiv) {
+                lastJobDiv.style.display = 'none';
+            }
+        } else {
+            // Update existing running job display
+            const processedEl = document.getElementById('metadata-processed');
+            const succeededEl = document.getElementById('metadata-succeeded');
+            const failedEl = document.getElementById('metadata-failed');
+            
+            if (processedEl) processedEl.textContent = job.processed;
+            if (succeededEl) succeededEl.textContent = job.succeeded;
+            if (failedEl) failedEl.textContent = job.failed;
+            
+            // Update progress bar
+            const progressSection = document.getElementById('metadata-progress-section');
+            if (progressSection && job.processed > 0) {
+                const progressBar = progressSection.querySelector('.bg-blue-600');
+                const progressText = progressSection.querySelector('span:last-child');
+                
+                if (progressBar) {
+                    const percentage = ((job.succeeded + job.failed) / job.processed * 100);
+                    progressBar.style.width = percentage + '%';
+                }
+                if (progressText) {
+                    progressText.textContent = job.processed + ' cards';
+                }
+            }
+        }
+        
+        // Disable the run button
+        const runBtn = document.getElementById('run-metadata-refresh-btn');
+        if (runBtn) {
+            runBtn.disabled = true;
+            runBtn.innerHTML = '<div class="spinner w-4 h-4 mr-2"></div>Metadata Refresh Running...';
+        }
+    } else {
+        // Job completed or no job running
+        if (currentJobDiv) {
+            currentJobDiv.remove();
+        }
+        
+        // Show last job section if it was hidden
+        if (lastJobDiv) {
+            lastJobDiv.style.display = 'block';
+        }
+        
+        // Re-enable the run button
+        const runBtn = document.getElementById('run-metadata-refresh-btn');
+        if (runBtn) {
+            runBtn.disabled = false;
+            runBtn.innerHTML = `
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Run Metadata Refresh Now
+            `;
+        }
+    }
+}
+
+// Start SSE when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    startMetadataSSE();
+});
+
+// Clean up SSE when page unloads
+window.addEventListener('beforeunload', function() {
+    if (metadataEventSource) {
+        metadataEventSource.close();
+    }
+});
+</script>

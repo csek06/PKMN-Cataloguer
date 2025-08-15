@@ -9,17 +9,35 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Left Column: Card Image and Basic Info -->
+        <!-- Left Column: Card Image and Artwork Info -->
         <div class="space-y-6">
             <!-- Card Image -->
             <div class="flex justify-center">
                 <img 
                     src="{{ card.image_large }}" 
                     alt="{{ card.name }}"
-                    class="max-w-full h-auto rounded-lg shadow-lg"
+                    class="max-w-full h-auto rounded-lg shadow-lg border-2 border-gray-200"
                     style="max-height: 400px;"
                 >
             </div>
+
+            <!-- Artist and Flavor Text -->
+            {% if card.artist or card.flavor_text %}
+            <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-200">
+                {% if card.artist %}
+                <div class="mb-3">
+                    <dt class="text-sm font-medium text-blue-700">Artist</dt>
+                    <dd class="text-sm text-blue-900 font-medium">{{ card.artist }}</dd>
+                </div>
+                {% endif %}
+                {% if card.flavor_text %}
+                <div>
+                    <dt class="text-sm font-medium text-blue-700 mb-1">Flavor Text</dt>
+                    <dd class="text-sm text-blue-800 italic leading-relaxed">"{{ card.flavor_text }}"</dd>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
 
             <!-- Basic Card Info -->
             <div class="bg-gray-50 rounded-lg p-4 space-y-3">
@@ -40,7 +58,7 @@
                     {% endif %}
                     {% if card.supertype %}
                     <div>
-                        <dt class="text-sm font-medium text-gray-500">Type</dt>
+                        <dt class="text-sm font-medium text-gray-500">Category</dt>
                         <dd class="text-sm text-gray-900">{{ card.supertype }}</dd>
                     </div>
                     {% endif %}
@@ -74,7 +92,7 @@
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
                         </svg>
-                        Pokémon TCG
+                        TCGPlayer
                     </a>
                     {% if external_links.pricecharting %}
                     <a 
@@ -98,6 +116,226 @@
             <!-- Collection Info -->
             {% if collection_entry %}
             {% include '_collection_info_section.html' %}
+            {% endif %}
+
+            <!-- Pokemon Stats -->
+            {% if card.hp or card.types or card.retreat_cost %}
+            <div class="bg-gradient-to-br from-red-50 to-orange-50 border border-red-200 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-red-900 mb-3 flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                    Pokémon Stats
+                </h3>
+                
+                <div class="space-y-3">
+                    {% if card.hp %}
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-sm font-medium text-red-700">HP</span>
+                            <span class="text-sm font-bold text-red-900">{{ card.hp }}</span>
+                        </div>
+                        <div class="w-full bg-red-200 rounded-full h-2">
+                            <div class="bg-gradient-to-r from-red-500 to-red-600 h-2 rounded-full transition-all duration-300" 
+                                 style="width: {{ (card.hp / 300 * 100)|round }}%"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if card.types %}
+                    <div>
+                        <span class="text-sm font-medium text-red-700 block mb-2">Types</span>
+                        <div class="flex flex-wrap gap-1">
+                            {% for type in card.types %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                {% if type == 'Fire' %}bg-red-100 text-red-800
+                                {% elif type == 'Water' %}bg-blue-100 text-blue-800
+                                {% elif type == 'Grass' %}bg-green-100 text-green-800
+                                {% elif type == 'Electric' %}bg-yellow-100 text-yellow-800
+                                {% elif type == 'Psychic' %}bg-purple-100 text-purple-800
+                                {% elif type == 'Fighting' %}bg-orange-100 text-orange-800
+                                {% elif type == 'Dark' %}bg-gray-100 text-gray-800
+                                {% elif type == 'Metal' %}bg-gray-100 text-gray-700
+                                {% elif type == 'Fairy' %}bg-pink-100 text-pink-800
+                                {% elif type == 'Dragon' %}bg-indigo-100 text-indigo-800
+                                {% else %}bg-gray-100 text-gray-600{% endif %}">
+                                {{ type }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if card.retreat_cost %}
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-red-700">Retreat Cost</span>
+                        <div class="flex items-center">
+                            {% set retreat_range = range(card.retreat_cost|int) %}
+                            {% for i in retreat_range %}
+                            <span class="inline-block w-4 h-4 bg-gray-300 rounded-full mr-1 text-xs text-center leading-4">⚡</span>
+                            {% endfor %}
+                            <span class="text-sm text-red-900 ml-1">{{ card.retreat_cost }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Evolution Chain -->
+            {% if card.evolves_from or card.evolves_to %}
+            <div class="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-green-900 mb-3 flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path>
+                    </svg>
+                    Evolution
+                </h3>
+                
+                <div class="flex items-center space-x-2 text-sm">
+                    {% if card.evolves_from %}
+                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-md font-medium">{{ card.evolves_from }}</span>
+                    <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                    {% endif %}
+                    
+                    <span class="px-2 py-1 bg-green-200 text-green-900 rounded-md font-bold">{{ card.name }}</span>
+                    
+                    {% if card.evolves_to %}
+                    <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                    {% for evolution in card.evolves_to %}
+                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-md font-medium">{{ evolution }}</span>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Attacks -->
+            {% if card.attacks %}
+            <div class="bg-gradient-to-br from-yellow-50 to-amber-50 border border-yellow-200 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-yellow-900 mb-3 flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"></path>
+                    </svg>
+                    Attacks
+                </h3>
+                
+                <div class="space-y-3">
+                    {% for attack in card.attacks %}
+                    <div class="bg-white border border-yellow-200 rounded-lg p-3">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-medium text-yellow-900">{{ attack.name }}</h4>
+                            {% if attack.damage %}
+                            <span class="text-sm font-bold text-yellow-800 bg-yellow-100 px-2 py-1 rounded">{{ attack.damage }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if attack.cost %}
+                        <div class="flex items-center mb-2">
+                            <span class="text-xs text-yellow-700 mr-2">Cost:</span>
+                            {% for energy in attack.cost %}
+                            <span class="inline-block w-4 h-4 rounded-full mr-1 text-xs text-center leading-4
+                                {% if energy == 'Fire' %}bg-red-400 text-white
+                                {% elif energy == 'Water' %}bg-blue-400 text-white
+                                {% elif energy == 'Grass' %}bg-green-400 text-white
+                                {% elif energy == 'Electric' %}bg-yellow-400 text-black
+                                {% elif energy == 'Psychic' %}bg-purple-400 text-white
+                                {% elif energy == 'Fighting' %}bg-orange-400 text-white
+                                {% elif energy == 'Dark' %}bg-gray-700 text-white
+                                {% elif energy == 'Metal' %}bg-gray-400 text-white
+                                {% elif energy == 'Fairy' %}bg-pink-400 text-white
+                                {% elif energy == 'Dragon' %}bg-indigo-400 text-white
+                                {% else %}bg-gray-300 text-black{% endif %}">⚡</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        {% if attack.text %}
+                        <p class="text-xs text-yellow-800 leading-relaxed">{{ attack.text }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Abilities -->
+            {% if card.abilities %}
+            <div class="bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-200 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-purple-900 mb-3 flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                    </svg>
+                    Abilities
+                </h3>
+                
+                <div class="space-y-3">
+                    {% for ability in card.abilities %}
+                    <div class="bg-white border border-purple-200 rounded-lg p-3">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-medium text-purple-900">{{ ability.name }}</h4>
+                            {% if ability.type %}
+                            <span class="text-xs text-purple-700 bg-purple-100 px-2 py-1 rounded">{{ ability.type }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if ability.text %}
+                        <p class="text-xs text-purple-800 leading-relaxed">{{ ability.text }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Weaknesses and Resistances -->
+            {% if card.weaknesses or card.resistances %}
+            <div class="bg-gradient-to-br from-gray-50 to-slate-50 border border-gray-200 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clip-rule="evenodd"></path>
+                    </svg>
+                    Battle Effects
+                </h3>
+                
+                <div class="grid grid-cols-1 gap-3">
+                    {% if card.weaknesses %}
+                    <div>
+                        <h4 class="text-xs font-medium text-red-700 mb-2">Weaknesses</h4>
+                        <div class="flex flex-wrap gap-2">
+                            {% for weakness in card.weaknesses %}
+                            <div class="flex items-center bg-red-100 text-red-800 px-2 py-1 rounded-md text-xs">
+                                <span class="font-medium">{{ weakness.type }}</span>
+                                {% if weakness.value %}
+                                <span class="ml-1">{{ weakness.value }}</span>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if card.resistances %}
+                    <div>
+                        <h4 class="text-xs font-medium text-blue-700 mb-2">Resistances</h4>
+                        <div class="flex flex-wrap gap-2">
+                            {% for resistance in card.resistances %}
+                            <div class="flex items-center bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-xs">
+                                <span class="font-medium">{{ resistance.type }}</span>
+                                {% if resistance.value %}
+                                <span class="ml-1">{{ resistance.value }}</span>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
             {% endif %}
 
             <!-- Current Pricing -->

@@ -1,14 +1,14 @@
 # System Patterns - Pokémon Card Cataloguer
 
 ## High-Level Architecture
-**Single-User Web Application** with simplified PriceCharting-only integration:
+**Single-User Web Application** with dual API integration:
 
 ```
 Frontend (HTMX + Alpine.js + Tailwind)
     ↓ HTTP Requests
 FastAPI Application Layer
     ↓ Business Logic
-PriceCharting Scraper Service
+PriceCharting Scraper Service + TCGdx API Service
     ↓ Data Access
 SQLModel ORM
     ↓ Storage
@@ -25,28 +25,44 @@ SQLite Database
 5. **Response** → Jinja2 template renders HTML fragment
 6. **Frontend** → HTMX swaps content, Alpine.js handles state
 
-### Simplified Search Flow Pattern
+### Dual API Search Flow Pattern
 ```
-SINGLE PATH (PriceCharting Only):
+SEARCH PATH (PriceCharting + TCGdx):
 User Query → PriceCharting Search → Immediate Results with Pricing
     ↓
 "charizard gx 57" → PriceCharting scrape → Card candidates with prices (2-5s)
     ↓
 Search modal template → HTMX modal display with pricing
 
-COLLECTION PATH (Direct Add):
-User Selection → Collection Addition with PriceCharting Data
+COLLECTION PATH (Dual Data Integration):
+User Selection → Collection Addition with PriceCharting + TCGdx Data
     ↓
 PC card selection → Create Card + CollectionEntry + PriceSnapshot → Add to collection
     ↓
-Collection table update → HTMX table row insertion
+Background metadata refresh → TCGdx API lookup → Enhanced card data
+    ↓
+Collection table update → HTMX table row insertion with complete metadata
+```
+
+### Metadata Enrichment Pattern
+```
+Weekly Metadata Refresh:
+Scheduler → Get Cards Needing Updates → TCGdx API Lookup → Database Update
+    ↓
+Cards without api_id → TCGdx search by name/set/number → Cache API ID
+    ↓
+Cards with api_id → TCGdx direct lookup → Update HP/types/rarity/attacks
+    ↓
+Job history tracking → Progress updates → Completion logging
 ```
 
 ### Collection Management Pattern
 ```
 Add Card → Create Card from PC Data → Create Collection Entry → Price Snapshot
     ↓
-PC Product ID → Card table (PC metadata) → CollectionEntry table (user data) → PriceSnapshot table (pricing history)
+PC Product ID → Card table (PC + TCGdx metadata) → CollectionEntry table (user data) → PriceSnapshot table (pricing history)
+    ↓
+Background enrichment → TCGdx API data → Enhanced card metadata (HP, types, rarity, attacks)
 ```
 
 ## Key Technical Decisions
@@ -64,6 +80,15 @@ PC Product ID → Card table (PC metadata) → CollectionEntry table (user data)
 - **Rate Limiting**: Built-in delays to respect PriceCharting's servers
 - **Error Handling**: Graceful degradation when scraping fails
 - **Caching**: In-memory caching of search results to reduce requests
+
+### TCGdx API Integration Strategy
+- **REST API Client**: Direct HTTP requests to api.tcgdx.net/v2/en
+- **Fast Response Times**: 0.5 second rate limiting (faster than old API)
+- **Advanced Filtering**: Support for complex search queries with prefixes
+- **Direct Lookups**: Efficient card retrieval by ID for cached cards
+- **Smart Matching**: Best match algorithm for card identification
+- **Error Handling**: Comprehensive timeout protection and availability checks
+- **Data Normalization**: Automatic mapping to existing database schema
 
 ### Frontend Architecture
 - **HTMX**: Server-side rendering with dynamic content swapping

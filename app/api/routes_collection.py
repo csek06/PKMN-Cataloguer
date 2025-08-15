@@ -527,10 +527,10 @@ async def update_collection_entry(
         )
         
         # Check if this request is coming from the card details modal
-        # by looking at the HX-Target header or referer
+        # by looking at the HX-Target header
         hx_target = request.headers.get("HX-Target", "")
         
-        if "bg-blue-50" in hx_target or "collection-info" in hx_target:
+        if "collection-info-section" in hx_target:
             # Return the collection info section for card details modal
             return templates.TemplateResponse(
                 "_collection_info_section.html",

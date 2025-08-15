@@ -17,6 +17,7 @@ from app.logging import (
 from app.api import routes_search, routes_collection, routes_cards, routes_admin, routes_settings
 from app.ui import pages
 from app.services.pricing_refresh import pricing_refresh_service
+from app.services.metadata_refresh import metadata_refresh_service
 
 
 # Configure logging first
@@ -39,6 +40,10 @@ async def lifespan(app: FastAPI):
         pricing_refresh_service.start()
         logger.info("pricing_scheduler_started")
         
+        # Start metadata refresh scheduler
+        metadata_refresh_service.start()
+        logger.info("metadata_scheduler_started")
+        
     except Exception as e:
         logger.error("startup_error", error=str(e), exc_info=True)
         raise
@@ -52,6 +57,10 @@ async def lifespan(app: FastAPI):
         # Stop pricing refresh scheduler
         pricing_refresh_service.stop()
         logger.info("pricing_scheduler_stopped")
+        
+        # Stop metadata refresh scheduler
+        metadata_refresh_service.stop()
+        logger.info("metadata_scheduler_stopped")
         
     except Exception as e:
         logger.error("shutdown_error", error=str(e), exc_info=True)

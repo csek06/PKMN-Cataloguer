@@ -37,18 +37,31 @@
         {% endif %}
     </td>
     <td class="px-6 py-4 whitespace-nowrap">
-        {% set condition_colors = {
-            'NM': 'bg-green-100 text-green-800',
-            'LP': 'bg-yellow-100 text-yellow-800',
-            'MP': 'bg-orange-100 text-orange-800',
-            'HP': 'bg-red-100 text-red-800',
-            'DMG': 'bg-red-100 text-red-800',
-            'GRADED': 'bg-purple-100 text-purple-800',
-            'UNKNOWN': 'bg-gray-100 text-gray-800'
-        } %}
-        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ condition_colors.get(entry.condition.value, 'bg-gray-100 text-gray-800') }}">
-            {{ entry.condition.value }}
-        </span>
+        <select 
+            hx-patch="/api/collection/{{ entry.id }}"
+            hx-vals='js:{"condition": event.target.value}'
+            hx-target="closest tr"
+            hx-swap="outerHTML"
+            hx-indicator="#global-loading"
+            class="text-xs font-semibold rounded-full border-0 focus:ring-2 focus:ring-blue-500 focus:outline-none
+                {% set condition_colors = {
+                    'NM': 'bg-green-100 text-green-800',
+                    'LP': 'bg-yellow-100 text-yellow-800',
+                    'MP': 'bg-orange-100 text-orange-800',
+                    'HP': 'bg-red-100 text-red-800',
+                    'DMG': 'bg-red-100 text-red-800',
+                    'GRADED': 'bg-purple-100 text-purple-800',
+                    'UNKNOWN': 'bg-gray-100 text-gray-800'
+                } %}{{ condition_colors.get(entry.condition.value, 'bg-gray-100 text-gray-800') }}"
+        >
+            <option value="NM" {% if entry.condition.value == 'NM' %}selected{% endif %}>NM</option>
+            <option value="LP" {% if entry.condition.value == 'LP' %}selected{% endif %}>LP</option>
+            <option value="MP" {% if entry.condition.value == 'MP' %}selected{% endif %}>MP</option>
+            <option value="HP" {% if entry.condition.value == 'HP' %}selected{% endif %}>HP</option>
+            <option value="DMG" {% if entry.condition.value == 'DMG' %}selected{% endif %}>DMG</option>
+            <option value="GRADED" {% if entry.condition.value == 'GRADED' %}selected{% endif %}>GRADED</option>
+            <option value="UNKNOWN" {% if entry.condition.value == 'UNKNOWN' %}selected{% endif %}>UNKNOWN</option>
+        </select>
     </td>
     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
         <div class="flex items-center space-x-2">

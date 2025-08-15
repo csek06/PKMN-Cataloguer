@@ -19,7 +19,8 @@
 
 ### External APIs
 - **PriceCharting**: Primary data source for card search and pricing
-- **httpx 0.27.x**: Async HTTP client for PriceCharting scraping
+- **TCGdx API**: Metadata source for card details (HP, types, rarity, attacks)
+- **httpx 0.27.x**: Async HTTP client for both PriceCharting scraping and TCGdx API
 - **BeautifulSoup4**: HTML parsing for PriceCharting data extraction
 
 ### Development & Operations
@@ -77,6 +78,37 @@ async def search_cards(self, query, request):
         # Parse HTML with BeautifulSoup for card data extraction
 ```
 
+### TCGdx API Integration
+```python
+# Direct REST API calls with JSON responses
+class TCGdxAPIService:
+    async def get_card_by_id(self, api_id: str) -> Optional[Dict]:
+        url = f"{TCGDX_BASE_URL}/cards/{api_id}"
+        response = await client.get(url)
+        return response.json() if response.status_code == 200 else None
+    
+    async def search_cards(self, name: str, set_name: str = None, number: str = None):
+        params = {"name": name}
+        if set_name:
+            params["set.name"] = set_name
+        if number:
+            params["localId"] = f"eq:{number}"
+        
+        response = await client.get(f"{TCGDX_BASE_URL}/cards", params=params)
+        return response.json() if response.status_code == 200 else []
+    
+    def extract_card_data(self, api_card: Dict) -> Dict:
+        # Map TCGdx response to database schema
+        return {
+            "api_id": api_card.get("id"),
+            "hp": api_card.get("hp"),
+            "types": api_card.get("types", []),
+            "rarity": api_card.get("rarity"),
+            "attacks": api_card.get("attacks", []),
+            # ... other field mappings
+        }
+```
+
 ### HTMX Integration
 ```html
 <!-- Server-side rendered fragments -->
@@ -99,8 +131,10 @@ async def search_cards(self, query, request):
 
 ### API Constraints
 - **PriceCharting Scraping**: Requires respectful rate limiting and error handling
+- **TCGdx API**: 0.5 second rate limiting, faster and more reliable than previous API
 - **Network Timeouts**: 30-second timeout for external requests
 - **HTML Parsing**: Dependent on PriceCharting's HTML structure stability
+- **API Availability**: Graceful degradation when TCGdx API is unavailable
 
 ## Development Environment
 
@@ -169,11 +203,17 @@ pytest-asyncio==0.21.*    # Async testing support
 - **End-to-End Tests**: Full workflow testing with test database
 - **Scraping Tests**: PriceCharting HTML parsing validation with sample data
 
-## Architecture Simplifications
-**Single Data Source**: By using only PriceCharting, we eliminate:
-- Complex API fallback logic
-- Multiple data source synchronization
-- API rate limit coordination
-- Data consistency issues between sources
+## Architecture Benefits
+**Dual API Strategy**: By combining PriceCharting and TCGdx, we achieve:
+- **Complementary Data**: PriceCharting provides pricing, TCGdx provides metadata
+- **No Data Overlap**: Each API serves distinct purposes, eliminating conflicts
+- **Enhanced Reliability**: TCGdx replaces unreliable Pokémon TCG API
+- **Improved Performance**: Faster TCGdx API improves metadata refresh speed
+- **Graceful Degradation**: System works with pricing data even if metadata API is down
 
-This results in a more maintainable, predictable system with faster development cycles.
+**Benefits Realized**:
+- More maintainable codebase with reliable APIs
+- Faster metadata enrichment with TCGdx
+- Complete card information (pricing + metadata)
+- Predictable performance with stable API services
+- Future-proof architecture with better API choices
