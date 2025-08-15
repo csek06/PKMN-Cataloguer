@@ -4,7 +4,7 @@
         <thead class="bg-gray-50">
             <tr>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onclick="updateSort('name')">
+                    onclick="window.updateSort('name')">
                     <div class="flex items-center space-x-1">
                         <span>Name</span>
                         {% if sort == 'name' %}
@@ -21,7 +21,7 @@
                     </div>
                 </th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onclick="updateSort('set_name')">
+                    onclick="window.updateSort('set_name')">
                     <div class="flex items-center space-x-1">
                         <span>Set</span>
                         {% if sort == 'set_name' %}
@@ -38,7 +38,7 @@
                     </div>
                 </th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onclick="updateSort('number')">
+                    onclick="window.updateSort('number')">
                     <div class="flex items-center space-x-1">
                         <span>#</span>
                         {% if sort == 'number' %}
@@ -55,7 +55,7 @@
                     </div>
                 </th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onclick="updateSort('rarity')">
+                    onclick="window.updateSort('rarity')">
                     <div class="flex items-center space-x-1">
                         <span>Rarity</span>
                         {% if sort == 'rarity' %}
@@ -72,7 +72,7 @@
                     </div>
                 </th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onclick="updateSort('condition')">
+                    onclick="window.updateSort('condition')">
                     <div class="flex items-center space-x-1">
                         <span>Condition</span>
                         {% if sort == 'condition' %}
@@ -89,7 +89,7 @@
                     </div>
                 </th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onclick="updateSort('qty')">
+                    onclick="window.updateSort('qty')">
                     <div class="flex items-center space-x-1">
                         <span>Qty</span>
                         {% if sort == 'qty' %}
@@ -107,7 +107,7 @@
                 </th>
                 {% if has_pricing %}
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onclick="updateSort('ungraded_price')">
+                    onclick="window.updateSort('ungraded_price')">
                     <div class="flex items-center space-x-1">
                         <span>Ungraded</span>
                         {% if sort == 'ungraded_price' %}
@@ -124,7 +124,7 @@
                     </div>
                 </th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onclick="updateSort('psa10_price')">
+                    onclick="window.updateSort('psa10_price')">
                     <div class="flex items-center space-x-1">
                         <span>PSA 10</span>
                         {% if sort == 'psa10_price' %}
@@ -142,7 +142,7 @@
                 </th>
                 {% endif %}
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onclick="updateSort('updated_at')">
+                    onclick="window.updateSort('updated_at')">
                     <div class="flex items-center space-x-1">
                         <span>Updated</span>
                         {% if sort == 'updated_at' %}

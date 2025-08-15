@@ -283,6 +283,12 @@ function collectionApp() {
                     this.loadCollection();
                 }
             });
+            
+            // Listen for custom sort events
+            document.addEventListener('sort-column', (event) => {
+                console.log('Received sort-column event:', event.detail.column);
+                this.updateSort(event.detail.column);
+            });
         },
 
         loadCollection() {
@@ -330,24 +336,94 @@ function collectionApp() {
 
 // Make functions globally available for templates
 window.updateSort = function(column) {
-    const app = Alpine.$data(document.querySelector('[x-data]'));
-    if (app && app.updateSort) {
-        app.updateSort(column);
+    console.log('updateSort called with column:', column);
+    
+    // Method 1: Try to call the method directly on the Alpine component
+    const appElement = document.querySelector('[x-data]');
+    if (appElement && appElement.__x) {
+        try {
+            // Access the Alpine component data directly
+            const componentData = appElement.__x.$data;
+            if (componentData && typeof componentData.updateSort === 'function') {
+                console.log('Calling updateSort via __x.$data');
+                componentData.updateSort(column);
+                return;
+            }
+        } catch (e) {
+            console.log('__x.$data method failed:', e);
+        }
     }
+    
+    // Method 2: Use Alpine's evaluate method to call the function
+    if (typeof Alpine !== 'undefined' && Alpine.evaluate && appElement) {
+        try {
+            console.log('Trying Alpine.evaluate method');
+            Alpine.evaluate(appElement, `updateSort('${column}')`);
+            return;
+        } catch (e) {
+            console.log('Alpine.evaluate failed:', e);
+        }
+    }
+    
+    // Method 3: Dispatch a custom event that Alpine can listen to
+    console.log('Dispatching custom sort event');
+    document.dispatchEvent(new CustomEvent('sort-column', { 
+        detail: { column: column } 
+    }));
 };
 
 window.changePage = function(page) {
-    const app = Alpine.$data(document.querySelector('[x-data]'));
-    if (app && app.changePage) {
-        app.changePage(page);
+    // Wait for Alpine.js to be ready
+    if (typeof Alpine !== 'undefined' && Alpine.$data) {
+        const appElement = document.querySelector('[x-data]');
+        if (appElement) {
+            const app = Alpine.$data(appElement);
+            if (app && app.changePage) {
+                app.changePage(page);
+                return;
+            }
+        }
     }
+    
+    // Fallback: retry after a short delay if Alpine isn't ready
+    setTimeout(() => {
+        if (typeof Alpine !== 'undefined' && Alpine.$data) {
+            const appElement = document.querySelector('[x-data]');
+            if (appElement) {
+                const app = Alpine.$data(appElement);
+                if (app && app.changePage) {
+                    app.changePage(page);
+                }
+            }
+        }
+    }, 100);
 };
 
 window.changePosterPage = function(page) {
-    const app = Alpine.$data(document.querySelector('[x-data]'));
-    if (app && app.changePosterPage) {
-        app.changePosterPage(page);
+    // Wait for Alpine.js to be ready
+    if (typeof Alpine !== 'undefined' && Alpine.$data) {
+        const appElement = document.querySelector('[x-data]');
+        if (appElement) {
+            const app = Alpine.$data(appElement);
+            if (app && app.changePosterPage) {
+                app.changePosterPage(page);
+                return;
+            }
+        }
     }
+    
+    // Fallback: retry after a short delay if Alpine isn't ready
+    setTimeout(() => {
+        if (typeof Alpine !== 'undefined' && Alpine.$data) {
+            const appElement = document.querySelector('[x-data]');
+            if (appElement) {
+                const app = Alpine.$data(appElement);
+                if (app && app.changePosterPage) {
+                    app.changePosterPage(page);
+                }
+            }
+        }
+    }, 100);
 };
 
 // Add event listeners for pagination buttons

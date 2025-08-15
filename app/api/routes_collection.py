@@ -402,12 +402,23 @@ async def get_collection(
             elif sort == "set_name":
                 sort_column = Card.set_name
             elif sort == "number":
-                sort_column = Card.number
+                # Sort card numbers as integers when possible, fallback to text
+                from sqlmodel import text
+                # For SQLite, use CASE to handle numeric vs non-numeric card numbers
+                # Numbers that are purely numeric get sorted as integers, others go to end
+                sort_column = text("""
+                    CASE 
+                        WHEN number GLOB '[0-9]*' AND number NOT GLOB '*[^0-9]*' 
+                        THEN CAST(number AS INTEGER)
+                        ELSE 999999 
+                    END
+                """)
             elif sort == "rarity":
                 sort_column = Card.rarity
             elif sort == "condition":
                 sort_column = CollectionEntry.condition
             elif sort == "qty":
+                # Quantity should be sorted as integer (it's already stored as integer)
                 sort_column = CollectionEntry.qty
             elif sort == "updated_at":
                 sort_column = CollectionEntry.updated_at

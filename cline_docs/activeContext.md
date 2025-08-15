@@ -1,6 +1,51 @@
 # Active Context - Pokémon Card Cataloguer
 
 ## Current Focus/Issues
+**✅ INTEGER COLUMN SORTING IMPLEMENTED (August 15, 2025)**:
+
+### **SORTING IMPROVEMENTS COMPLETED**:
+All columns in the collection table now have proper sortable functionality with integer sorting for numeric columns.
+
+**Integer Sorting Implementation**:
+- **Card Number (#) Column**: Now sorts numerically instead of alphabetically
+  - Uses SQLite CASE statement to detect purely numeric values
+  - Numeric card numbers (1, 2, 10, 100) sort as integers: 1, 2, 10, 100
+  - Non-numeric card numbers (1a, 2b, etc.) are placed at the end
+  - Handles mixed collections with both numeric and alphanumeric card numbers
+  
+- **Quantity (Qty) Column**: Already stored as integer, now properly sorted numerically
+  - Quantities sort in proper numerical order: 1, 2, 5, 10, 20
+  - No more alphabetical sorting where 10 would come before 2
+  
+- **Price Columns (Ungraded, PSA 10)**: Already implemented correctly
+  - Stored as cents (integers) in database for precision
+  - Sorted numerically with NULL values placed at end
+  - Proper ascending/descending order for monetary values
+
+**Technical Implementation**:
+```sql
+-- Card Number Sorting (SQLite)
+CASE 
+    WHEN number GLOB '[0-9]*' AND number NOT GLOB '*[^0-9]*' 
+    THEN CAST(number AS INTEGER)
+    ELSE 999999 
+END
+
+-- Quantity Sorting (Already Integer)
+CollectionEntry.qty
+
+-- Price Sorting (Already Integer - Cents)
+latest_prices.c.ungraded_cents
+latest_prices.c.psa10_cents
+```
+
+**User Experience Improvements**:
+- All column headers remain clickable with proper hover effects
+- Sort direction indicators (arrows) show current sort state
+- Consistent sorting behavior across all numeric columns
+- Large collections (1400+ cards) sort efficiently
+- Mixed data types handled gracefully (numeric vs alphanumeric)
+
 **✅ CRITICAL UI BUGS FIXED (August 15, 2025)**:
 
 ### **1. MODAL Z-INDEX LAYERING BUG RESOLVED**:
