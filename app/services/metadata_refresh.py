@@ -298,32 +298,69 @@ class MetadataRefreshService:
                 )
                 return False
             
+            # Validate extracted data before database update
+            if not self._validate_card_data(extracted_data, card.id, card.name):
+                logger.error(
+                    "metadata_validation_failed",
+                    card_id=card.id,
+                    card_name=card.name,
+                    extracted_data=extracted_data
+                )
+                return False
+            
             # Update card with metadata in a separate session
             with get_db_session() as session:
                 card_record = session.get(Card, card.id)
                 if card_record:
-                    # Update all the metadata fields (allow empty lists, 0, etc.)
-                    for field, value in extracted_data.items():
-                        if hasattr(card_record, field):
-                            setattr(card_record, field, value)
-                    
-                    # Always update the sync timestamp
-                    card_record.api_last_synced_at = datetime.utcnow()
-                    card_record.updated_at = datetime.utcnow()
-                    
-                    session.add(card_record)
-                    session.commit()
-                    
-                    logger.info(
-                        "metadata_card_updated",
-                        card_id=card.id,
-                        card_name=card.name,
-                        api_id=extracted_data.get("api_id"),
-                        hp=extracted_data.get("hp"),
-                        types=extracted_data.get("types"),
-                        rarity=extracted_data.get("rarity")
-                    )
-                    return True
+                    try:
+                        # Update all the metadata fields (allow empty lists, 0, etc.)
+                        for field, value in extracted_data.items():
+                            if hasattr(card_record, field):
+                                setattr(card_record, field, value)
+                        
+                        # Always update the sync timestamp
+                        card_record.api_last_synced_at = datetime.utcnow()
+                        card_record.updated_at = datetime.utcnow()
+                        
+                        session.add(card_record)
+                        session.commit()
+                        
+                        logger.info(
+                            "metadata_card_updated",
+                            card_id=card.id,
+                            card_name=card.name,
+                            api_id=extracted_data.get("api_id"),
+                            hp=extracted_data.get("hp"),
+                            types=extracted_data.get("types"),
+                            rarity=extracted_data.get("rarity"),
+                            set_id=extracted_data.get("set_id"),
+                            set_name=extracted_data.get("set_name")
+                        )
+                        return True
+                        
+                    except Exception as db_error:
+                        session.rollback()
+                        logger.error(
+                            "metadata_database_update_error",
+                            card_id=card.id,
+                            card_name=card.name,
+                            error=str(db_error),
+                            error_type=type(db_error).__name__,
+                            extracted_data=extracted_data,
+                            exc_info=True
+                        )
+                        
+                        # Check if this is a constraint violation
+                        if "constraint" in str(db_error).lower() or "not null" in str(db_error).lower():
+                            logger.error(
+                                "metadata_constraint_violation_detected",
+                                card_id=card.id,
+                                card_name=card.name,
+                                error=str(db_error),
+                                message="Database schema may need to be updated to allow NULL values for set_id/set_name"
+                            )
+                        
+                        return False
                 else:
                     logger.error(
                         "metadata_card_not_found",
@@ -336,6 +373,76 @@ class MetadataRefreshService:
                 "metadata_process_card_error",
                 card_id=card.id,
                 card_name=card.name,
+                error=str(e),
+                exc_info=True
+            )
+            return False
+
+    def _validate_card_data(self, extracted_data: dict, card_id: int, card_name: str) -> bool:
+        """Validate extracted data before database update."""
+        try:
+            # Check for required fields that should never be None
+            required_fields = {
+                'name': 'Card name is required',
+                'api_last_synced_at': 'Sync timestamp is required'
+            }
+            
+            for field, error_msg in required_fields.items():
+                if field in extracted_data and extracted_data[field] is None:
+                    logger.error(
+                        "metadata_validation_required_field_null",
+                        card_id=card_id,
+                        card_name=card_name,
+                        field=field,
+                        error=error_msg
+                    )
+                    return False
+            
+            # Log nullable fields that are None (this is expected and OK)
+            nullable_fields = ['set_id', 'set_name', 'hp', 'rarity', 'supertype']
+            for field in nullable_fields:
+                if field in extracted_data and extracted_data[field] is None:
+                    logger.debug(
+                        "metadata_validation_nullable_field_null",
+                        card_id=card_id,
+                        card_name=card_name,
+                        field=field,
+                        message=f"{field} is None (this is allowed)"
+                    )
+            
+            # Validate data types
+            if 'hp' in extracted_data and extracted_data['hp'] is not None:
+                if not isinstance(extracted_data['hp'], (int, type(None))):
+                    logger.warning(
+                        "metadata_validation_hp_type_invalid",
+                        card_id=card_id,
+                        card_name=card_name,
+                        hp_value=extracted_data['hp'],
+                        hp_type=type(extracted_data['hp']).__name__
+                    )
+                    extracted_data['hp'] = None
+            
+            # Validate list fields
+            list_fields = ['types', 'abilities', 'attacks', 'weaknesses', 'resistances', 'evolves_to', 'national_pokedex_numbers']
+            for field in list_fields:
+                if field in extracted_data and extracted_data[field] is not None:
+                    if not isinstance(extracted_data[field], list):
+                        logger.warning(
+                            "metadata_validation_list_field_invalid",
+                            card_id=card_id,
+                            card_name=card_name,
+                            field=field,
+                            value_type=type(extracted_data[field]).__name__
+                        )
+                        extracted_data[field] = []
+            
+            return True
+            
+        except Exception as e:
+            logger.error(
+                "metadata_validation_error",
+                card_id=card_id,
+                card_name=card_name,
                 error=str(e),
                 exc_info=True
             )

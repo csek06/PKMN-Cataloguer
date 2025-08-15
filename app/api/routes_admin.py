@@ -52,7 +52,11 @@ async def health_check_endpoint(request: Request):
         
         status_code = 200 if db_healthy else 503
         return JSONResponse(
-            content=response.dict(),
+            content={
+                "status": response.status,
+                "database": response.database,
+                "timestamp": response.timestamp.isoformat()
+            },
             status_code=status_code
         )
     
