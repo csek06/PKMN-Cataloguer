@@ -1,9 +1,9 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, Request, HTTPException
+from fastapi import APIRouter, Depends, Request, HTTPException, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
 
 from app.db import get_session
 from app.logging import get_logger
@@ -184,32 +184,97 @@ async def get_card_price_history(
 async def get_collection_poster_view(
     request: Request,
     name: str = None,
+    set_name: str = None,
+    condition: str = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(48, ge=1, le=100),
+    sort: str = Query("name"),
+    direction: str = Query("asc"),
     session: Session = Depends(get_session)
 ):
-    """Get collection in poster/grid view."""
+    """Get collection in poster/grid view with pagination."""
     try:
         request_id = getattr(request.state, "request_id", None)
         
-        # Build query for poster view - simplified
+        # Build base query
         query = (
             select(CollectionEntry, Card)
             .select_from(CollectionEntry)
             .join(Card, CollectionEntry.card_id == Card.id)
         )
         
-        # Apply name filter if provided
+        # Apply filters
         if name:
             query = query.where(Card.name.ilike(f"%{name}%"))
         
-        # Order by card name for consistent display
-        query = query.order_by(Card.name)
+        if set_name:
+            query = query.where(Card.set_name.ilike(f"%{set_name}%"))
+        
+        if condition:
+            query = query.where(CollectionEntry.condition == condition)
+        
+        # Apply sorting
+        sort_column = None
+        if sort == "name":
+            sort_column = Card.name
+        elif sort == "set_name":
+            sort_column = Card.set_name
+        elif sort == "number":
+            sort_column = Card.number
+        elif sort == "rarity":
+            sort_column = Card.rarity
+        elif sort == "condition":
+            sort_column = CollectionEntry.condition
+        elif sort == "qty":
+            sort_column = CollectionEntry.qty
+        elif sort == "updated_at":
+            sort_column = CollectionEntry.updated_at
+        else:
+            sort_column = Card.name
+        
+        if direction.lower() == "desc":
+            sort_column = sort_column.desc()
+        
+        query = query.order_by(sort_column)
+        
+        # Count total results for pagination
+        count_query = (
+            select(func.count(CollectionEntry.id))
+            .select_from(CollectionEntry)
+            .join(Card, CollectionEntry.card_id == Card.id)
+        )
+        
+        # Apply same filters to count query
+        if name:
+            count_query = count_query.where(Card.name.ilike(f"%{name}%"))
+        if set_name:
+            count_query = count_query.where(Card.set_name.ilike(f"%{set_name}%"))
+        if condition:
+            count_query = count_query.where(CollectionEntry.condition == condition)
+        
+        total_count = session.exec(count_query).first()
+        
+        # Apply pagination
+        offset = (page - 1) * page_size
+        query = query.offset(offset).limit(page_size)
         
         results = session.exec(query).all()
         
+        # Calculate pagination info
+        total_pages = (total_count + page_size - 1) // page_size
+        has_prev = page > 1
+        has_next = page < total_pages
+        
         logger.info(
             "collection_poster_request",
+            total_count=total_count,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
             results_count=len(results),
-            name_filter=name,
+            filters={"name": name, "set_name": set_name, "condition": condition},
+            sort=sort,
+            direction=direction,
             request_id=request_id
         )
         
@@ -218,7 +283,19 @@ async def get_collection_poster_view(
             {
                 "request": request,
                 "results": results,
-                "name_filter": name or "",
+                "total_count": total_count,
+                "page": page,
+                "page_size": page_size,
+                "total_pages": total_pages,
+                "has_prev": has_prev,
+                "has_next": has_next,
+                "sort": sort,
+                "direction": direction,
+                "filters": {
+                    "name": name or "",
+                    "set_name": set_name or "",
+                    "condition": condition or ""
+                },
                 "has_pricing": pricecharting_scraper.is_available()
             }
         )

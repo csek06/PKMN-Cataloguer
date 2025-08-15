@@ -200,7 +200,7 @@ function collectionApp() {
         loadCollection() {
             const params = new URLSearchParams({
                 page: this.pagination.page,
-                page_size: this.pagination.page_size,
+                page_size: this.currentView === 'poster' ? 48 : this.pagination.page_size,
                 sort: this.pagination.sort,
                 direction: this.pagination.direction,
                 ...this.filters
@@ -211,7 +211,7 @@ function collectionApp() {
                     target: '#collection-table-container'
                 });
             } else {
-                htmx.ajax('GET', `/api/collection/poster?name=${this.filters.name}`, {
+                htmx.ajax('GET', `/api/collection/poster?${params}`, {
                     target: '#collection-poster-container'
                 });
             }
@@ -231,9 +231,61 @@ function collectionApp() {
         changePage(page) {
             this.pagination.page = page;
             this.loadCollection();
+        },
+
+        changePosterPage(page) {
+            this.pagination.page = page;
+            this.loadCollection();
         }
     }
 }
+
+// Make functions globally available for templates
+window.updateSort = function(column) {
+    const app = Alpine.$data(document.querySelector('[x-data]'));
+    if (app && app.updateSort) {
+        app.updateSort(column);
+    }
+};
+
+window.changePage = function(page) {
+    const app = Alpine.$data(document.querySelector('[x-data]'));
+    if (app && app.changePage) {
+        app.changePage(page);
+    }
+};
+
+window.changePosterPage = function(page) {
+    const app = Alpine.$data(document.querySelector('[x-data]'));
+    if (app && app.changePosterPage) {
+        app.changePosterPage(page);
+    }
+};
+
+// Add event listeners for pagination buttons
+document.addEventListener('DOMContentLoaded', function() {
+    // Table pagination buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('page-btn') || e.target.closest('.page-btn')) {
+            const button = e.target.classList.contains('page-btn') ? e.target : e.target.closest('.page-btn');
+            const page = button.getAttribute('data-page');
+            if (page) {
+                window.changePage(parseInt(page));
+            }
+        }
+    });
+    
+    // Poster pagination buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('poster-page-btn') || e.target.closest('.poster-page-btn')) {
+            const button = e.target.classList.contains('poster-page-btn') ? e.target : e.target.closest('.poster-page-btn');
+            const page = button.getAttribute('data-page');
+            if (page) {
+                window.changePosterPage(parseInt(page));
+            }
+        }
+    });
+});
 
 // Handle successful card additions and updates
 document.addEventListener('htmx:afterRequest', function(event) {

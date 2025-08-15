@@ -252,33 +252,3 @@
     <p class="mt-1 text-sm text-gray-500">Get started by searching for cards to add to your collection.</p>
 </div>
 {% endif %}
-
-<script>
-// Make sort and pagination functions available globally
-window.updateSort = function(column) {
-    const app = Alpine.$data(document.querySelector('[x-data]'));
-    if (app && app.updateSort) {
-        app.updateSort(column);
-    }
-};
-
-window.changePage = function(page) {
-    const app = Alpine.$data(document.querySelector('[x-data]'));
-    if (app && app.changePage) {
-        app.changePage(page);
-    }
-};
-
-// Add event listeners for pagination buttons
-document.addEventListener('DOMContentLoaded', function() {
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('page-btn') || e.target.closest('.page-btn')) {
-            const button = e.target.classList.contains('page-btn') ? e.target : e.target.closest('.page-btn');
-            const page = button.getAttribute('data-page');
-            if (page) {
-                window.changePage(parseInt(page));
-            }
-        }
-    });
-});
-</script>
