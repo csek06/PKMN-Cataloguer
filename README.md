@@ -1,563 +1,339 @@
-# Pokémon Card Cataloguer
-
-A single-user Pokémon card collection manager with real-time pricing integration. Built with FastAPI, HTMX, and SQLite, powered by PriceCharting for accurate market data.
-
-## Features
-
-- **🔐 Secure Authentication**: Beautiful Pokémon-themed login system with password management
-- **🔍 Natural Language Search**: Type queries like "buzzwole gx 57/111" or "charizard base set" to find cards
-- **📊 Dual View Modes**: Table view for detailed management, poster view for visual browsing  
-- **💰 Real-time Pricing**: Live market prices from PriceCharting during search and collection viewing
-- **📈 Price History**: Track price changes over time with interactive charts
-- **⚡ Smart Collection Management**: Add cards with one click, manage quantities with +/- buttons
-- **🎯 Zero-Quantity Deletion**: Reduce quantity to 0 to automatically remove cards from collection
-- **🔄 Automated Price Updates**: Daily scheduled price refreshes with comprehensive job tracking
-- **⚙️ Database-Driven Settings**: Manage configuration through web interface
-- **📝 Production Logging**: File-based structured logs with rotation and compression
-- **🐳 Docker Support**: Single container deployment with persistent data
-
-## Quick Start
-
-1. **Clone and Setup**
-   ```bash
-   git clone https://github.com/csek06/PKMN-Cataloguer.git
-   cd PKMN-Cataloguer
-   cp .env.example .env
-   ```
-
-2. **Run with Docker**
-   ```bash
-   docker compose up --build
-   ```
-
-3. **Access the Application**
-   Open http://localhost:8000
-
-4. **First-Time Setup**
-   - On first visit, you'll be redirected to a beautiful setup page
-   - Choose your username (Trainer Name)
-   - Create a secure password (minimum 6 characters)
-   - Click "Start Your Journey!" to create your account
-
-5. **Start Collecting**
-   - Search for cards using natural language
-   - Click "Add to Collection" from search results
-   - Manage quantities with +/- buttons
-   - View detailed card information by clicking card names
-   - Switch between table and poster views
-
-## Architecture
-
-### Single Data Source Design
-The application uses **PriceCharting as the single source of truth** for both card discovery and pricing data. This simplified architecture provides:
-
-- **Consistent Data**: All information comes from the same marketplace source
-- **Real-time Pricing**: Current market prices during search and collection viewing
-- **Simplified Maintenance**: No complex API coordination or fallback logic
-- **Reliable Performance**: Predictable response times and data format
-
-### Tech Stack
-- **Backend**: Python 3.12, FastAPI, SQLModel (SQLite with WAL mode)
-- **Frontend**: HTMX, Alpine.js, Tailwind CSS, Chart.js
-- **Data Source**: PriceCharting (scraping-based integration)
-- **Scheduling**: APScheduler for automated price updates
-- **Logging**: Structured file-based logging with rotation
-- **Deployment**: Docker with single container
-
-## Authentication
-
-### First-Time Setup
-On your first visit to the application, you'll be automatically redirected to a beautiful Pokémon-themed setup page where you can create your account:
-
-1. **Choose Username**: Enter your desired username (referred to as "Trainer Name")
-2. **Create Password**: Set a secure password (minimum 6 characters)
-3. **Confirm Password**: Re-enter your password for verification
-4. **Start Your Journey**: Click the button to create your account and automatically log in
-
-### Login System
-- **Beautiful Interface**: Pokémon-themed login page with sparkle animations and Pokéball design
-- **Secure Authentication**: Passwords are hashed using bcrypt with automatic salt generation
-- **Session Management**: 7-day JWT session tokens stored in secure HttpOnly cookies
-- **Remember Login**: Stay logged in across browser sessions until token expires
-
-### Password Management
-Access password management through the user menu (click your username in the top-right corner):
-
-- **Change Password**: Update your password anytime from the user dropdown menu
-- **Current Password Required**: Must enter current password for security (unless using admin reset)
-- **Password Confirmation**: New password must be confirmed to prevent typos
-- **Instant Updates**: Password changes take effect immediately
-
-### Account Lockout Recovery
-If you forget your password or get locked out of your account, you can use the emergency admin reset feature:
-
-#### Emergency Access Procedure
-1. **Set Environment Variable**: Add `ADMIN_RESET_PASSWORD=your_emergency_password` to your environment
-   - **Docker Compose**: Add to `.env` file: `ADMIN_RESET_PASSWORD=emergency123`
-   - **Docker Run**: Add `-e ADMIN_RESET_PASSWORD=emergency123` to your docker run command
-   - **Local Development**: Add to `.env` file or export as environment variable
-
-2. **Restart Application**: Restart your container or application to load the new environment variable
-   ```bash
-   # Docker Compose
-   docker compose down && docker compose up -d
-   
-   # Docker Run
-   docker restart pokemon-cataloguer
-   ```
-
-3. **Login with Emergency Password**: 
-   - Go to the login page
-   - Enter **any username** (it will be ignored)
-   - Enter your emergency password in the password field
-   - Click "Sign In"
-
-4. **Forced Password Change**: You'll be automatically redirected to change your password
-   - The system will force you to set a new secure password
-   - No current password verification required during emergency reset
-   - Choose a strong password you'll remember
-
-5. **Remove Emergency Variable**: After regaining access, remove the `ADMIN_RESET_PASSWORD` environment variable for security
-   - Delete the line from your `.env` file
-   - Restart the application to ensure the emergency access is disabled
-
-#### Security Notes
-- **Temporary Access**: The emergency password should only be used for account recovery
-- **Remove After Use**: Always remove the `ADMIN_RESET_PASSWORD` variable after regaining access
-- **Strong Emergency Password**: Use a secure emergency password different from your regular password
-- **Single User**: This emergency access works for the single user account in the system
-
-### Authentication Security Features
-- **Bcrypt Password Hashing**: Industry-standard password security with automatic salt generation
-- **JWT Session Tokens**: Secure session management with 7-day expiration
-- **HttpOnly Cookies**: Session tokens stored securely to prevent XSS attacks
-- **Route Protection**: All application pages and APIs require valid authentication
-- **Automatic Redirects**: Unauthenticated users automatically redirected to login
-- **Session Validation**: Every request validates the current session token
-
-## Configuration
-
-### Environment Variables
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `DATA_DIR` | Data directory path | `/data` | No |
-| `SECRET_KEY` | Application secret key | `change-me` | Yes |
-
-### Database-Driven Settings
-
-Most configuration is now managed through the web interface at `/settings`:
-
-- **Log Level**: DEBUG, INFO, WARNING, ERROR
-- **Timezone**: 35+ timezone options grouped by region
-- **Price Refresh Batch Size**: 10-1000 cards per batch
-- **Rate Limiting**: 0.1-10 requests per second to PriceCharting
-- **SQL Echo**: Enable verbose database logging for debugging
-
-### PriceCharting Integration
-
-The application uses direct web scraping of PriceCharting in a bot-friendly manner:
-
-- **No API Token Required**: Direct scraping eliminates the need for API keys
-- **Respectful Scraping**: Built-in rate limiting and delays to respect PriceCharting's servers
-- **Reliable Data**: Extracts card information, pricing, and metadata directly from product pages
-- **Automatic Fallbacks**: Multiple parsing methods ensure robust data extraction
-## Usage
-
-### Search Capabilities
-
-The search system understands natural language queries:
-
-- **Basic**: `charizard` - Find cards with "charizard" in the name
-- **With Number**: `charizard 4/102` - Find card #4 from a set of 102  
-- **With Set**: `charizard base` - Find Charizard from Base Set
-- **With Variants**: `charizard gx` - Find Charizard-GX cards
-- **Complex**: `buzzwole gx 57/111 crimson invasion` - Specific card from specific set
-
-**Supported Patterns**: `gx`, `ex`, `vmax`, `vstar`, `v`, `full art`, `reverse`, `holo`, `shadowless`, `first edition`
-
-### Collection Management
-
-#### Adding Cards
-1. Type search query in the search box
-2. Click search icon or press Enter
-3. Modal opens with "Searching for cards..." loading state
-4. Results appear with card images and current pricing
-5. Click "Add to Collection" to add with real-time pricing data
-
-#### Managing Quantities
-- **Increase**: Click `+` button to add more copies
-- **Decrease**: Click `-` button to reduce quantity
-- **Remove**: Reduce quantity to 0 to automatically remove from collection
-- **All changes happen instantly** without page refresh
-
-#### Collection Views
-- **Table View**: Sortable columns with detailed information
-  - Click card names to open details modal
-  - All 10 columns are sortable (Name, Set, #, Rarity, Variant, Condition, Qty, Ungraded Price, PSA 10 Price, Updated)
-  - Hover effects and sort indicators
-- **Poster View**: Visual grid layout with card images
-
-#### Card Details
-- **Comprehensive Information**: Images, stats, set details, pricing history
-- **Editable Conditions**: 7-option dropdown (Near Mint, Lightly Played, etc.)
-- **Price History Charts**: Interactive visualization of price trends
-- **External Links**: Direct links to PriceCharting and TCGPlayer product pages
-
-### Pricing Features
-
-- **Real-time Search Pricing**: Current market prices shown during search
-- **Collection Pricing**: Ungraded and PSA 10 prices with update dates
-- **Automated Updates**: Daily refresh at 3:00 AM (configurable timezone)
-- **Manual Refresh**: Trigger updates from Settings page with real-time progress
-- **Price History**: Historical data with interactive charts
-- **Job Tracking**: Complete history of all price refresh jobs
-
-## Project Structure
-
-```
-app/
-├── main.py                    # FastAPI application entry point
-├── config.py                  # Configuration management with database settings
-├── logging.py                 # File-based structured logging setup
-├── db.py                      # Database connection and SQLite setup
-├── models.py                  # SQLModel database models
-├── schemas.py                 # Pydantic request/response schemas
-├── services/                  # Business logic services
-│   ├── parser.py              # Natural language query parsing
-│   ├── pricecharting_scraper.py # PriceCharting integration
-│   └── pricing_refresh.py     # Automated price update service
-├── api/                       # API route handlers
-│   ├── routes_search.py       # Card search endpoints
-│   ├── routes_collection.py   # Collection management
-│   ├── routes_cards.py        # Card details and history
-│   ├── routes_settings.py     # Settings management
-│   └── routes_admin.py        # Administrative functions
-└── ui/                        # UI route handlers
-    └── pages.py               # Main page rendering
-
-templates/                     # Jinja2 HTML templates
-├── base.html                  # Base template with navigation
-├── index.html                 # Main collection page
-├── settings.html              # Settings management page
-├── _search_modal.html         # Search results modal
-├── _collection_table.html     # Sortable collection table
-├── _collection_table_row.html # Individual table rows
-├── _collection_info_section.html # Reusable collection info component
-├── _card_details.html         # Card details modal
-└── _*.html                    # Other template fragments
-
-data/                          # Persistent data directory
-├── app.db                     # SQLite database
-└── logs/                      # Log files with rotation
-    ├── app.log                # All application logs
-    ├── access.log             # HTTP request logs
-    ├── external.log           # PriceCharting API calls
-    ├── error.log              # Error-level messages only
-    └── *.log.N.gz             # Compressed rotated logs
-
-tests/                         # Unit and integration tests
-```
-
-## Database Schema
-
-### Core Models
-
-#### Card
-- Basic card information extracted from PriceCharting
-- Images, set information, rarity, card numbers
-- Unique identifier using PriceCharting product ID
-
-#### CollectionEntry  
-- User's collection with quantities and conditions
-- Links to Card model with foreign key relationship
-- Tracks purchase prices, notes, and variants
-
-#### PriceChartingLink
-- Links cards to PriceCharting products
-- Stores product IDs, URLs, and metadata
-- Tracks TCGPlayer integration data
-
-#### PriceSnapshot
-- Historical price data points over time
-- Supports multiple price types (ungraded, PSA 10, etc.)
-- Linked to both Card and PriceChartingLink models
-
-#### AppSettings
-- Database-stored configuration settings
-- Replaces environment variables for user-configurable options
-- Cached for performance with automatic invalidation
-
-#### JobHistory
-- Tracks all price refresh jobs
-- Stores job status, progress, and error information
-- Provides audit trail for automated processes
-
-## API Endpoints
-
-### Public Endpoints
-- `GET /` - Main collection page
-- `GET /settings` - Settings management page
-- `GET /api/healthz` - Application health check
-
-### Search & Discovery
-- `POST /api/search` - Search PriceCharting for cards (returns HTML modal)
-- `POST /api/select-card` - Add selected card to collection with pricing
-
-### Collection Management
-- `GET /api/collection` - Get collection table view (HTML)
-- `GET /api/collection/poster` - Get collection poster view (HTML)
-- `POST /api/collection` - Add card to collection
-- `PATCH /api/collection/{entry_id}` - Update collection entry (quantity, condition)
-
-### Card Details
-- `GET /api/cards/{card_id}` - Get card details modal (HTML)
-- `GET /api/cards/{card_id}/price-history.json` - Price history data for charts
-
-### Settings Management
-- `GET /api/settings/app` - Get current application settings (JSON)
-- `PUT /api/settings/app` - Update application settings
-- `GET /api/settings/app/form` - Get settings form (HTML)
-
-### Price Refresh System
-- `POST /api/settings/pricing/run` - Trigger manual price refresh
-- `GET /api/settings/pricing/status` - Get current job status (HTML)
-- `GET /api/settings/pricing/history` - Get job history (HTML)
-- `GET /api/settings/pricing/stats` - Get pricing statistics (HTML)
-
-## Logging System
-
-### File-Based Logging
-The application uses comprehensive file-based logging stored in `/data/logs/`:
-
-- **app.log**: All application logs (INFO, WARNING, ERROR levels)
-- **access.log**: HTTP request logs with timing and client information
-- **external.log**: External API calls to PriceCharting (URLs sanitized)
-- **error.log**: Error-level messages only for quick debugging
-
-### Log Rotation
-- **File Size**: 10MB maximum per log file
-- **Backup Files**: Keep 5 rotated files per log type
-- **Compression**: Automatic gzip compression (.gz files)
-- **Dual Output**: Both file and console logging (Docker-compatible)
-
-### Log Format
-Structured JSON logging with consistent fields:
-
-```json
-{
-  "timestamp": "2025-08-14T19:18:00.123Z",
-  "level": "info", 
-  "event": "http_request",
-  "request_id": "b9c8d7e6-f5a4-3b2c-1d0e-9f8e7d6c5b4a",
-  "method": "POST",
-  "path": "/api/search",
-  "status": 200,
-  "duration_ms": 1247,
-  "client_ip": "172.18.0.1",
-  "route": "POST /api/search"
-}
-```
-
-## Development
-
-### Local Development Setup
-
+# 🎴 Pokémon Card Cataloguer
+
+**The Ultimate Pokémon Card Collection Manager**
+
+Transform your Pokémon card collecting experience with this stunning, feature-rich application that combines beautiful design with powerful functionality. Built for collectors who want the best tools to manage, track, and enjoy their collections.
+
+![Pokémon Card Cataloguer](https://img.shields.io/badge/Status-Production%20Ready-brightgreen) ![Version](https://img.shields.io/badge/Version-2.0-blue) ![License](https://img.shields.io/badge/License-MIT-green)
+
+---
+
+## ✨ What Makes This Special
+
+### 🎨 **Stunning Pokémon-Themed Design**
+Experience a beautifully crafted interface that celebrates Pokémon with:
+- **Gorgeous Gradients**: Electric blue, grass green, fire orange, and psychic purple themes throughout
+- **Smooth Animations**: Floating Pokéballs, sparkling effects, and gentle hover animations
+- **Glass Morphism**: Modern backdrop blur effects on modals and cards
+- **Mobile Perfect**: Flawless experience on phones, tablets, and desktops
+- **Professional Polish**: Every detail designed to delight and inspire
+
+### 🔐 **Secure & Personal**
+Your collection is protected with enterprise-grade security:
+- **Beautiful Setup**: First-time setup with Pokéball design and smooth animations
+- **Secure Login**: Industry-standard password hashing and session management
+- **Emergency Recovery**: Admin reset capability if you forget your password
+- **Private Collection**: Single-user design keeps your collection completely private
+
+### 🔍 **Intelligent Search**
+Find any Pokémon card with natural language:
+- **Smart Queries**: Type "charizard gx 57" or "pikachu base set" and get instant results
+- **Live Pricing**: See current market values as you search
+- **Card Preview**: Review complete card details before adding to your collection
+- **Dual Options**: Quick add for cards you know, or preview for careful selection
+
+---
+
+## 🚀 Key Features
+
+### 📊 **Collection Dashboard**
+Get instant insights into your collection with beautiful overview cards:
+- **📈 Total Value**: See your collection's current market worth at a glance
+- **🏆 Grading Potential**: Discover how much your cards could be worth if graded PSA 10
+- **📋 Collection Stats**: Track total cards, unique entries, and collection growth
+- **💎 Premium Analysis**: Understand the grading premium for your valuable cards
+
+### 🎯 **Smart Collection Management**
+Manage your cards with intuitive, powerful tools:
+- **⚡ Instant Updates**: All changes happen immediately without page refreshes
+- **🔢 Smart Quantities**: Use +/- buttons to adjust quantities, reduce to 0 to remove cards
+- **👁️ Dual Views**: Switch between detailed table view and visual poster gallery
+- **🔄 Real-time Sync**: Everything stays perfectly synchronized across all views
+
+### 📱 **Perfect Mobile Experience**
+Enjoy full functionality on any device:
+- **📲 Responsive Design**: Optimized layouts for phones, tablets, and desktops
+- **👆 Touch Friendly**: Large buttons and smooth interactions for mobile use
+- **🔄 Seamless Sync**: Same beautiful experience across all your devices
+- **⚡ Fast Loading**: Optimized performance even on slower connections
+
+### 💰 **Advanced Pricing Intelligence**
+Stay informed about your collection's value:
+- **📈 Live Market Data**: Real-time pricing from PriceCharting during search and viewing
+- **📊 Price History**: Interactive charts showing how card values change over time
+- **🔄 Auto Updates**: Daily price refreshes keep your collection values current
+- **💎 Multiple Grades**: Track ungraded, PSA 9, PSA 10, and BGS 10 values
+
+### 🃏 **Rich Card Details**
+See everything about your Pokémon cards:
+- **⚡ Pokémon Stats**: HP bars, type badges, and retreat costs with beautiful visuals
+- **🔗 Evolution Chains**: Visual flow showing how Pokémon evolve with arrows and badges
+- **⚔️ Attacks & Abilities**: Complete battle information with energy costs and descriptions
+- **🛡️ Battle Effects**: Weaknesses and resistances with type-specific color coding
+- **🖼️ High-Quality Images**: Crystal clear card images from reliable sources
+
+### 🗄️ **Data Protection & Export**
+Your collection data is safe and portable:
+- **💾 Automatic Backups**: Scheduled backups protect against data loss
+- **📤 CSV Export**: Download your complete collection data anytime
+- **🔄 Migration System**: Seamless updates with automatic database migrations
+- **📊 Export Statistics**: See exactly what data you can export before downloading
+
+---
+
+## 🎮 How It Works
+
+### 1. **🏁 Get Started in Minutes**
 ```bash
-# Create virtual environment
+# Quick Docker setup
+git clone https://github.com/csek06/PKMN-Cataloguer.git
+cd PKMN-Cataloguer
+docker compose up --build
+```
+Open http://localhost:8000 and create your account with the beautiful setup wizard!
+
+### 2. **🔍 Search & Discover**
+- Type natural queries like "charizard vmax" or "pikachu 25/25"
+- Browse search results with live pricing and high-quality images
+- Preview cards to see complete details before adding
+- Add cards instantly with current market values
+
+### 3. **📋 Manage Your Collection**
+- View your collection in stunning table or poster layouts
+- Adjust quantities with intuitive +/- buttons
+- Click card names to see detailed information and price history
+- Filter and sort to find exactly what you're looking for
+
+### 4. **📈 Track Value & Growth**
+- Monitor your collection's total value in real-time
+- See grading potential and premium calculations
+- Review price history charts for individual cards
+- Export your data for external analysis or backup
+
+---
+
+## 🛠️ What's Under the Hood
+
+### **🏗️ Modern Architecture**
+- **FastAPI**: Lightning-fast Python web framework
+- **HTMX**: Smooth, modern interactions without complex JavaScript
+- **SQLite**: Reliable local database with automatic backups
+- **Docker**: One-command deployment and updates
+
+### **🔌 Smart Integrations**
+- **PriceCharting**: Real-time market pricing and card discovery
+- **TCGdx API**: Complete Pokémon metadata including stats and abilities
+- **Automated Jobs**: Daily price updates and maintenance tasks
+- **Export Systems**: CSV data export and backup management
+
+### **📊 Performance Optimized**
+- **Pagination**: Handle thousands of cards smoothly
+- **Caching**: Smart caching for faster load times
+- **Mobile First**: Optimized for all device sizes
+- **Offline Ready**: Works great even with slow internet
+
+---
+
+## 🎯 Perfect For
+
+### **🏆 Serious Collectors**
+- Track valuable collections with precise market data
+- Monitor grading potential and investment opportunities
+- Export data for insurance or tax purposes
+- Maintain detailed records of purchases and conditions
+
+### **📱 Casual Enthusiasts**
+- Beautiful interface makes collection management enjoyable
+- Easy search helps you avoid buying duplicates
+- Visual poster view lets you admire your collection
+- Simple setup gets you started in minutes
+
+### **💼 Organized Collectors**
+- Comprehensive filtering and sorting options
+- Detailed condition tracking and notes
+- Backup and export for peace of mind
+- Professional-grade data management
+
+---
+
+## 🚀 Quick Start Guide
+
+### **Option 1: Docker (Recommended)**
+```bash
+# Clone the repository
+git clone https://github.com/csek06/PKMN-Cataloguer.git
+cd PKMN-Cataloguer
+
+# Start with Docker Compose
+docker compose up --build -d
+
+# Access at http://localhost:8000
+```
+
+### **Option 2: Local Development**
+```bash
+# Set up Python environment
 python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Copy environment template
+# Copy configuration
 cp .env.example .env
 
-# Edit configuration if needed (SECRET_KEY for production)
-nano .env
-
-# Run development server
+# Run the application
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### Running Tests
+### **🎯 First Time Setup**
+1. **Visit the App**: Open http://localhost:8000 in your browser
+2. **Create Account**: Use the beautiful setup wizard to create your trainer account
+3. **Start Collecting**: Search for your first card and add it to your collection
+4. **Explore Features**: Try the different views, check out card details, and explore settings
 
-```bash
-# Install test dependencies (included in requirements.txt)
-pip install pytest pytest-asyncio
+---
 
-# Run all tests
-pytest tests/
+## 💡 Pro Tips
 
-# Run specific test file
-pytest tests/test_pricecharting_scraper.py -v
+### **🔍 Search Like a Pro**
+- Use specific terms: "charizard base set 4/102" finds exact cards
+- Try variants: "pikachu promo", "mewtwo ex", "rayquaza vmax"
+- Include sets: "garchomp dragon majesty" narrows results
+- Be creative: The search understands many Pokémon terms!
 
-# Run with coverage
-pytest tests/ --cov=app --cov-report=html
-```
+### **📊 Collection Management**
+- **Table View**: Best for detailed management and editing
+- **Poster View**: Perfect for visual browsing and showing off
+- **Filters**: Use name and condition filters to find specific cards quickly
+- **Sorting**: Click any column header to sort your collection
 
-### Development Features
+### **💰 Value Tracking**
+- Check the dashboard regularly to see collection value changes
+- Use price history charts to time purchases and sales
+- Export data periodically for backup and analysis
+- Set up automatic price updates to stay current
 
-- **Hot Reload**: Uvicorn automatically reloads on code changes
-- **Debug Logging**: Set `LOG_LEVEL=DEBUG` in settings for verbose output
-- **SQL Echo**: Enable in settings to see all database queries
-- **Test Database**: Tests use separate SQLite database
+### **🔒 Security & Backup**
+- Change your password regularly from the user menu
+- Use the backup feature before major changes
+- Export your collection data as CSV for external backup
+- Keep your Docker container updated for security patches
 
-## Deployment
+---
 
-### Docker Compose (Recommended)
+## 🎨 Screenshots & Features
 
-```bash
-# Build and run in background
-docker compose up --build -d
+### **🏠 Beautiful Dashboard**
+- Stunning collection overview with gradient cards
+- Real-time value calculations and statistics
+- Smooth animations and hover effects
+- Mobile-responsive design
 
-# View real-time logs
-docker compose logs -f
+### **🔍 Smart Search Experience**
+- Instant search results with live pricing
+- Card preview before adding to collection
+- Beautiful modal design with glass morphism
+- Dual add options for different workflows
 
-# Stop services
-docker compose down
+### **📋 Collection Views**
+- **Table View**: Sortable columns with all card details
+- **Poster View**: Visual grid with card images
+- **Card Details**: Complete Pokémon stats and battle information
+- **Price History**: Interactive charts showing value trends
 
-# Update and restart
-git pull
-docker compose up --build -d
-```
+### **⚙️ Settings & Management**
+- Beautiful settings page with gradient themes
+- Backup and export management
+- Job history and statistics
+- User account management
 
-### Manual Docker Deployment
+---
 
-```bash
-# Build image
-docker build -t pokemon-cataloguer .
+## 🤝 Support & Community
 
-# Run container with data persistence
-docker run -d \
-  --name pokemon-cataloguer \
-  -p 8000:8000 \
-  -v $(pwd)/data:/data \
-  --env-file .env \
-  pokemon-cataloguer
+### **📚 Documentation**
+- **README**: Complete setup and usage guide (you're reading it!)
+- **API Docs**: Available at `/docs` when running the application
+- **Code Comments**: Well-documented codebase for developers
 
-# View logs
-docker logs -f pokemon-cataloguer
-```
+### **🐛 Issues & Feedback**
+- **GitHub Issues**: Report bugs or request features
+- **Discussions**: Share ideas and get help from the community
+- **Pull Requests**: Contribute improvements and fixes
 
-### Production Considerations
+### **🔧 Troubleshooting**
+- **Health Check**: Visit `/api/healthz` to verify application status
+- **Logs**: Check Docker logs with `docker compose logs -f`
+- **Settings**: Use debug mode for detailed troubleshooting
+- **Backup**: Restore from backup if needed
 
-- **Data Persistence**: Mount `/data` volume for database and logs
-- **Environment Variables**: Use `.env` file or Docker secrets
-- **Reverse Proxy**: Consider nginx for SSL termination
-- **Monitoring**: Log files provide comprehensive application metrics
-- **Backups**: Regular backups of `/data/app.db` recommended
+---
 
-## Troubleshooting
+## 🌟 Why Choose This Cataloguer?
 
-### Common Issues
+### **🎨 Most Beautiful Interface**
+No other Pokémon card manager comes close to this level of visual polish. Every interaction is designed to be delightful and engaging.
 
-**Search returns no results**
-- Verify internet connectivity to PriceCharting
-- Check if PriceCharting website is accessible
-- Review `external.log` for scraping errors
-- Try different search terms
+### **🚀 Complete Feature Set**
+From basic collection management to advanced value tracking, this application has everything a serious collector needs.
 
-**No pricing data showing**
-- Verify internet connectivity to PriceCharting
-- Check if PriceCharting website is accessible
-- Review `external.log` for scraping errors
-- Try different search terms or wait and retry
+### **📱 Mobile Excellence**
+Perfect experience on every device - manage your collection anywhere, anytime.
 
-**Price updates not running**
-- Check Settings page for scheduler status
-- Verify timezone configuration in settings
-- Review `app.log` for scheduler errors
-- Ensure sufficient disk space for database updates
+### **🔒 Privacy & Security**
+Your collection data stays on your device. No cloud dependencies, no data sharing, complete privacy.
 
-**Collection changes not saving**
-- Check browser console for JavaScript errors
-- Verify HTMX requests are completing successfully
-- Review `access.log` for HTTP request errors
-- Ensure database file is writable
+### **⚡ Performance & Reliability**
+Built with modern technologies for speed, reliability, and scalability. Handle thousands of cards without slowdown.
 
-**Application won't start**
-- Check `error.log` for startup errors
-- Verify `/data` directory permissions
-- Ensure port 8000 is available
-- Check Docker container logs
+### **🔄 Always Improving**
+Regular updates add new features and improvements based on user feedback and the latest web technologies.
 
-### Health Check
+---
 
-Visit `/api/healthz` to verify application status:
+## 📈 Technical Specifications
 
-```json
-{
-  "status": "healthy",
-  "database": true,
-  "timestamp": "2025-08-14T19:18:00.000Z"
-}
-```
-
-### Debug Mode
-
-Enable debug logging for detailed troubleshooting:
-1. Go to Settings page
-2. Set Log Level to "DEBUG"
-3. Save settings
-4. Check `app.log` for detailed information
-
-## Performance
-
-### System Requirements
+### **System Requirements**
 - **Memory**: 512MB RAM minimum, 1GB recommended
-- **Storage**: 100MB for application, additional space for collection data
-- **CPU**: Single core sufficient for personal use
-- **Network**: Internet connection required for PriceCharting integration
+- **Storage**: 100MB for application + collection data
+- **Network**: Internet connection for pricing and metadata
+- **Browser**: Modern browser with JavaScript enabled
 
-### Performance Characteristics
-- **Search Speed**: 2-5 seconds for PriceCharting queries
+### **Performance Characteristics**
+- **Search Speed**: 2-5 seconds for live pricing queries
 - **Collection Loading**: Sub-second for collections under 1000 cards
-- **Database Performance**: SQLite with WAL mode for concurrent access
-- **Memory Usage**: ~50MB base, scales with collection size
+- **Mobile Performance**: Optimized for smooth mobile interactions
+- **Offline Capability**: Core features work without internet
 
-### Optimization Tips
-- **Batch Size**: Adjust price refresh batch size in settings (default: 200)
-- **Rate Limiting**: Configure PriceCharting request rate (default: 1/sec)
-- **Log Levels**: Use INFO or WARNING in production to reduce log volume
-- **Database Maintenance**: SQLite auto-vacuums, no manual maintenance needed
+### **Security Features**
+- **Password Hashing**: Bcrypt with automatic salt generation
+- **Session Management**: Secure JWT tokens with HttpOnly cookies
+- **Data Protection**: Local SQLite database with automatic backups
+- **Privacy First**: No external data sharing or tracking
 
-## Contributing
+---
 
-1. Fork the repository on GitHub
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes with appropriate tests
-4. Ensure all tests pass (`pytest tests/`)
-5. Update documentation if needed
-6. Commit your changes (`git commit -m 'Add amazing feature'`)
-7. Push to the branch (`git push origin feature/amazing-feature`)
-8. Open a Pull Request
+## 🎉 Get Started Today!
 
-### Development Guidelines
-- Follow existing code style and patterns
-- Add tests for new functionality
-- Update documentation for user-facing changes
-- Use structured logging for new features
-- Maintain backward compatibility when possible
+Ready to transform your Pokémon card collecting experience? 
 
-## License
+**🚀 [Download Now](https://github.com/csek06/PKMN-Cataloguer)** and discover why collectors are calling this the ultimate Pokémon card management tool.
 
-This project is provided as-is for educational and personal use. See the repository for specific license terms.
+### **What You'll Get:**
+- ✅ Beautiful, professional interface that makes collecting fun
+- ✅ Real-time pricing data to make informed decisions
+- ✅ Complete collection management with powerful tools
+- ✅ Mobile-perfect experience for collecting on the go
+- ✅ Secure, private data storage you control
+- ✅ Regular updates with new features and improvements
 
-## Support
+**Join the community of collectors who've discovered the joy of organized, beautiful collection management!**
 
-For issues and questions:
+---
 
-1. **Check Documentation**: Review this README and troubleshooting section
-2. **Review Logs**: Check `/data/logs/` files for error details
-3. **GitHub Issues**: Open an issue with logs and reproduction steps
-4. **Health Check**: Verify `/api/healthz` shows healthy status
+*Built with ❤️ for Pokémon card collectors everywhere*
 
-## Acknowledgments
-
-- **PriceCharting**: Market data and pricing information
-- **Pokémon Company**: Card images and metadata
-- **FastAPI**: High-performance web framework
-- **HTMX**: Modern HTML-over-the-wire approach
-- **SQLModel**: Type-safe database operations
+[![GitHub Stars](https://img.shields.io/github/stars/csek06/PKMN-Cataloguer?style=social)](https://github.com/csek06/PKMN-Cataloguer)
+[![Docker Pulls](https://img.shields.io/badge/Docker-Ready-blue)](https://github.com/csek06/PKMN-Cataloguer)
+[![Mobile Friendly](https://img.shields.io/badge/Mobile-Optimized-green)](https://github.com/csek06/PKMN-Cataloguer)

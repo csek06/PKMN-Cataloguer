@@ -104,8 +104,22 @@
         </div>
         <div class="w-full bg-gray-200 rounded-full h-2">
             <div class="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all duration-300" 
-                 style="width: {{ pricing_coverage }}%"></div>
+                 data-width="{{ pricing_coverage }}"></div>
         </div>
+        <style>
+            [data-width] {
+                width: var(--coverage-width, 0%);
+            }
+        </style>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const progressBar = document.querySelector('[data-width]');
+                if (progressBar) {
+                    const width = progressBar.getAttribute('data-width') + '%';
+                    progressBar.style.width = width;
+                }
+            });
+        </script>
     </div>
     {% endif %}
     {% endif %}
