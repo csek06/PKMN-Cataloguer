@@ -40,6 +40,33 @@
         </div>
     </div>
 
+    <!-- Collection Summary -->
+    <div 
+        id="collection-summary"
+        hx-get="/api/collection/stats"
+        hx-trigger="load once, refresh-summary from:body"
+        hx-swap="innerHTML"
+    >
+        <!-- Loading placeholder -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="bg-gray-100 rounded-xl p-6 animate-pulse">
+                <div class="h-4 bg-gray-300 rounded w-1/2 mb-4"></div>
+                <div class="h-8 bg-gray-300 rounded w-3/4 mb-2"></div>
+                <div class="h-3 bg-gray-300 rounded w-1/2"></div>
+            </div>
+            <div class="bg-gray-100 rounded-xl p-6 animate-pulse">
+                <div class="h-4 bg-gray-300 rounded w-1/2 mb-4"></div>
+                <div class="h-8 bg-gray-300 rounded w-3/4 mb-2"></div>
+                <div class="h-3 bg-gray-300 rounded w-1/2"></div>
+            </div>
+            <div class="bg-gray-100 rounded-xl p-6 animate-pulse">
+                <div class="h-4 bg-gray-300 rounded w-1/2 mb-4"></div>
+                <div class="h-8 bg-gray-300 rounded w-3/4 mb-2"></div>
+                <div class="h-3 bg-gray-300 rounded w-1/2"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- View Toggle and Filters -->
     <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
@@ -73,7 +100,7 @@
                     <input 
                         type="text" 
                         x-model="filters.name"
-                        @input.debounce.500ms="loadCollection()"
+                        @input.debounce.500ms="isInitialized && loadCollection()"
                         placeholder="Filter by name..."
                         class="pl-8 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
@@ -86,7 +113,7 @@
                 
                 <select 
                     x-model="filters.condition"
-                    @change="loadCollection()"
+                    @change="isInitialized && loadCollection()"
                     class="text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                     <option value="">All Conditions</option>
@@ -105,30 +132,19 @@
     <div class="bg-white rounded-lg shadow-sm overflow-hidden">
         <!-- Table View -->
         <div x-show="currentView === 'table'" id="collection-table-container">
-            <div 
-                hx-get="/api/collection"
-                hx-trigger="load once"
-                hx-vals="js:{page: 1, page_size: 50, sort: 'name', direction: 'asc'}"
-            >
-                <!-- Loading placeholder -->
-                <div class="p-8 text-center text-gray-500">
-                    <div class="spinner mx-auto mb-4"></div>
-                    Loading collection...
-                </div>
+            <!-- Loading placeholder -->
+            <div class="p-8 text-center text-gray-500">
+                <div class="spinner mx-auto mb-4"></div>
+                Loading collection...
             </div>
         </div>
 
         <!-- Poster View -->
         <div x-show="currentView === 'poster'" id="collection-poster-container">
-            <div 
-                hx-get="/api/collection/poster"
-                hx-trigger="load once"
-            >
-                <!-- Loading placeholder -->
-                <div class="p-8 text-center text-gray-500">
-                    <div class="spinner mx-auto mb-4"></div>
-                    Loading collection...
-                </div>
+            <!-- Loading placeholder -->
+            <div class="p-8 text-center text-gray-500">
+                <div class="spinner mx-auto mb-4"></div>
+                Loading collection...
             </div>
         </div>
     </div>
@@ -150,6 +166,7 @@ function collectionApp() {
     return {
         currentView: 'table',
         isEmpty: false,
+        isInitialized: false,
         filters: {
             name: '',
             set_name: '',
@@ -166,9 +183,17 @@ function collectionApp() {
             // Load initial collection
             this.loadCollection();
             
-            // Watch for view changes
-            this.$watch('currentView', () => {
-                this.loadCollection();
+            // Mark as initialized after a short delay
+            setTimeout(() => {
+                this.isInitialized = true;
+            }, 100);
+            
+            // Watch for view changes (but not on initial load)
+            this.$watch('currentView', (newView, oldView) => {
+                // Only reload if this is not the initial load
+                if (oldView !== undefined && this.isInitialized) {
+                    this.loadCollection();
+                }
             });
         },
 
@@ -210,21 +235,30 @@ function collectionApp() {
     }
 }
 
-// Handle successful card additions
+// Handle successful card additions and updates
 document.addEventListener('htmx:afterRequest', function(event) {
     if (event.detail.xhr.status === 200 && 
         (event.detail.pathInfo.requestPath === '/api/collection' || 
-         event.detail.pathInfo.requestPath === '/api/select-card')) {
-        // Reload collection after adding a card
+         event.detail.pathInfo.requestPath === '/api/select-card' ||
+         (event.detail.pathInfo.requestPath.includes('/api/collection/') && 
+          !event.detail.pathInfo.requestPath.includes('/api/collection/stats') &&
+          !event.detail.pathInfo.requestPath.includes('/api/collection/poster')))) {
+        // Reload collection after adding/updating a card
         setTimeout(() => {
             const app = Alpine.$data(document.querySelector('[x-data]'));
             if (app) {
                 app.loadCollection();
             }
+            
+            // Refresh the collection summary
+            htmx.trigger(document.body, 'refresh-summary');
         }, 100);
         
-        // Close search modal
-        closeSearchModal();
+        // Close search modal if it was a card addition
+        if (event.detail.pathInfo.requestPath === '/api/collection' || 
+            event.detail.pathInfo.requestPath === '/api/select-card') {
+            closeSearchModal();
+        }
     }
 });
 </script>

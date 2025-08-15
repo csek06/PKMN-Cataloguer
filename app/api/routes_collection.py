@@ -18,6 +18,104 @@ templates = Jinja2Templates(directory="templates")
 logger = get_logger("collection_api")
 
 
+@router.get("/collection/stats", response_class=HTMLResponse)
+async def get_collection_stats(
+    request: Request,
+    session: Session = Depends(get_session)
+):
+    """Get collection statistics for the summary section."""
+    try:
+        request_id = getattr(request.state, "request_id", None)
+        
+        # Get total unique cards and total quantity
+        stats_query = session.exec(
+            select(
+                func.count(func.distinct(CollectionEntry.card_id)).label('unique_cards'),
+                func.sum(CollectionEntry.qty).label('total_quantity')
+            )
+        ).first()
+        
+        unique_cards = stats_query.unique_cards or 0
+        total_quantity = stats_query.total_quantity or 0
+        
+        # Calculate total values by joining with latest prices
+        # Create subquery for latest price snapshot per card
+        latest_price_subquery = (
+            select(
+                PriceSnapshot.card_id,
+                PriceSnapshot.ungraded_cents,
+                PriceSnapshot.psa10_cents,
+                func.row_number().over(
+                    partition_by=PriceSnapshot.card_id,
+                    order_by=PriceSnapshot.as_of_date.desc()
+                ).label('rn')
+            )
+            .subquery()
+        )
+        
+        # Filter to only get the latest price (rn = 1)
+        latest_prices = (
+            select(
+                latest_price_subquery.c.card_id,
+                latest_price_subquery.c.ungraded_cents,
+                latest_price_subquery.c.psa10_cents
+            )
+            .where(latest_price_subquery.c.rn == 1)
+            .subquery()
+        )
+        
+        # Calculate total values
+        value_query = session.exec(
+            select(
+                func.sum(CollectionEntry.qty * latest_prices.c.ungraded_cents).label('total_ungraded_cents'),
+                func.sum(CollectionEntry.qty * latest_prices.c.psa10_cents).label('total_psa10_cents')
+            )
+            .select_from(CollectionEntry)
+            .join(latest_prices, CollectionEntry.card_id == latest_prices.c.card_id)
+        ).first()
+        
+        total_ungraded_cents = value_query.total_ungraded_cents or 0
+        total_psa10_cents = value_query.total_psa10_cents or 0
+        
+        # Convert cents to dollars
+        total_ungraded_value = total_ungraded_cents / 100.0
+        total_psa10_value = total_psa10_cents / 100.0
+        
+        logger.info(
+            "collection_stats_calculated",
+            unique_cards=unique_cards,
+            total_quantity=total_quantity,
+            total_ungraded_value=total_ungraded_value,
+            total_psa10_value=total_psa10_value,
+            request_id=request_id
+        )
+        
+        return templates.TemplateResponse(
+            "_collection_summary.html",
+            {
+                "request": request,
+                "unique_cards": unique_cards,
+                "total_quantity": total_quantity,
+                "total_ungraded_value": total_ungraded_value,
+                "total_psa10_value": total_psa10_value,
+                "has_pricing": pricecharting_scraper.is_available()
+            }
+        )
+    
+    except Exception as e:
+        logger.error(
+            "get_collection_stats_error",
+            error=str(e),
+            request_id=getattr(request.state, "request_id", None),
+            exc_info=True
+        )
+        
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to retrieve collection statistics"
+        )
+
+
 @router.post("/collection", response_class=HTMLResponse)
 async def add_to_collection(
     request: Request,

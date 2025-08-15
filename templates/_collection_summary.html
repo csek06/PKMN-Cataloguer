@@ -1,0 +1,111 @@
+<!-- Collection Summary Section -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <!-- Total Cards Card -->
+    <div class="relative overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+        <div class="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
+        <div class="relative p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-blue-100 text-sm font-medium uppercase tracking-wide">Total Cards</p>
+                    <p class="text-3xl font-bold mt-2">{{ total_quantity }}</p>
+                    <p class="text-blue-200 text-sm mt-1">{{ unique_cards }} unique card{{ 's' if unique_cards != 1 else '' }}</p>
+                </div>
+                <div class="bg-white/20 rounded-full p-3">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                </div>
+            </div>
+            <!-- Decorative elements -->
+            <div class="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
+            <div class="absolute -bottom-2 -left-2 w-16 h-16 bg-white/5 rounded-full"></div>
+        </div>
+    </div>
+
+    <!-- Ungraded Value Card -->
+    <div class="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+        <div class="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
+        <div class="relative p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-emerald-100 text-sm font-medium uppercase tracking-wide">Ungraded Value</p>
+                    {% if has_pricing and total_ungraded_value > 0 %}
+                        <p class="text-3xl font-bold mt-2">${{ "%.2f"|format(total_ungraded_value) }}</p>
+                        <p class="text-emerald-200 text-sm mt-1">Market estimate</p>
+                    {% else %}
+                        <p class="text-2xl font-bold mt-2 text-emerald-200">—</p>
+                        <p class="text-emerald-300 text-sm mt-1">{% if not has_pricing %}Pricing unavailable{% else %}No pricing data{% endif %}</p>
+                    {% endif %}
+                </div>
+                <div class="bg-white/20 rounded-full p-3">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                    </svg>
+                </div>
+            </div>
+            <!-- Decorative elements -->
+            <div class="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
+            <div class="absolute -bottom-2 -left-2 w-16 h-16 bg-white/5 rounded-full"></div>
+        </div>
+    </div>
+
+    <!-- PSA 10 Value Card -->
+    <div class="relative overflow-hidden bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+        <div class="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
+        <div class="relative p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-yellow-100 text-sm font-medium uppercase tracking-wide">PSA 10 Value</p>
+                    {% if has_pricing and total_psa10_value > 0 %}
+                        <p class="text-3xl font-bold mt-2">${{ "%.2f"|format(total_psa10_value) }}</p>
+                        {% if total_ungraded_value > 0 %}
+                            {% set premium_multiplier = total_psa10_value / total_ungraded_value %}
+                            <p class="text-yellow-200 text-sm mt-1">{{ "%.1fx"|format(premium_multiplier) }} premium</p>
+                        {% else %}
+                            <p class="text-yellow-200 text-sm mt-1">Perfect grade value</p>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-2xl font-bold mt-2 text-yellow-200">—</p>
+                        <p class="text-yellow-300 text-sm mt-1">{% if not has_pricing %}Pricing unavailable{% else %}No pricing data{% endif %}</p>
+                    {% endif %}
+                </div>
+                <div class="bg-white/20 rounded-full p-3">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                    </svg>
+                </div>
+            </div>
+            <!-- Decorative elements -->
+            <div class="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
+            <div class="absolute -bottom-2 -left-2 w-16 h-16 bg-white/5 rounded-full"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Collection Insights (if we have data) -->
+{% if has_pricing and total_ungraded_value > 0 and total_psa10_value > 0 %}
+<div class="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-4 mb-6 border border-gray-200">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="bg-blue-100 rounded-full p-2">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                </svg>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-900">Collection Insights</p>
+                <p class="text-xs text-gray-600">
+                    {% set avg_ungraded = total_ungraded_value / total_quantity %}
+                    {% set avg_psa10 = total_psa10_value / total_quantity %}
+                    Average ungraded: ${{ "%.2f"|format(avg_ungraded) }} • Average PSA 10: ${{ "%.2f"|format(avg_psa10) }}
+                </p>
+            </div>
+        </div>
+        <div class="text-right">
+            {% set total_potential_gain = total_psa10_value - total_ungraded_value %}
+            <p class="text-sm font-semibold text-green-600">+${{ "%.2f"|format(total_potential_gain) }}</p>
+            <p class="text-xs text-gray-500">Grading potential</p>
+        </div>
+    </div>
+</div>
+{% endif %}
