@@ -394,11 +394,25 @@ class TCGdxAPIService:
                 "evolves_to": [],  # Not directly available in TCGdx
             }
             
-            # Set information
+            # Set information - handle missing set data gracefully
             set_info = api_card.get("set", {})
+            set_id = set_info.get("id")
+            set_name = set_info.get("name")
+            
+            # Provide fallback values if set information is missing
+            if not set_id and not set_name:
+                logger.warning(
+                    "tcgdx_missing_set_info",
+                    api_id=api_card.get("id"),
+                    card_name=api_card.get("name")
+                )
+                # Use None values - the database schema now allows this
+                set_id = None
+                set_name = None
+            
             card_data.update({
-                "set_id": set_info.get("id"),
-                "set_name": set_info.get("name"),
+                "set_id": set_id,
+                "set_name": set_name,
                 "number": api_card.get("localId"),
                 "release_date": None,  # Not available in TCGdx
             })

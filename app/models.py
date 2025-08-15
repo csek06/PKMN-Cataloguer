@@ -26,8 +26,8 @@ class Card(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     tcg_id: str = Field(unique=True, index=True)
     name: str = Field(index=True)
-    set_id: str = Field(index=True)
-    set_name: str = Field(index=True)
+    set_id: Optional[str] = Field(default=None, index=True)
+    set_name: Optional[str] = Field(default=None, index=True)
     number: str
     rarity: Optional[str] = None
     supertype: Optional[str] = None
