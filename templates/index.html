@@ -289,6 +289,17 @@ function collectionApp() {
                 console.log('Received sort-column event:', event.detail.column);
                 this.updateSort(event.detail.column);
             });
+            
+            // Listen for custom pagination events
+            document.addEventListener('page-change', (event) => {
+                console.log('Received page-change event:', event.detail.page);
+                this.changePage(event.detail.page);
+            });
+            
+            document.addEventListener('poster-page-change', (event) => {
+                console.log('Received poster-page-change event:', event.detail.page);
+                this.changePosterPage(event.detail.page);
+            });
         },
 
         loadCollection() {
@@ -338,34 +349,18 @@ function collectionApp() {
 window.updateSort = function(column) {
     console.log('updateSort called with column:', column);
     
-    // Method 1: Try to call the method directly on the Alpine component
-    const appElement = document.querySelector('[x-data]');
-    if (appElement && appElement.__x) {
-        try {
-            // Access the Alpine component data directly
-            const componentData = appElement.__x.$data;
-            if (componentData && typeof componentData.updateSort === 'function') {
-                console.log('Calling updateSort via __x.$data');
-                componentData.updateSort(column);
-                return;
-            }
-        } catch (e) {
-            console.log('__x.$data method failed:', e);
-        }
-    }
-    
-    // Method 2: Use Alpine's evaluate method to call the function
-    if (typeof Alpine !== 'undefined' && Alpine.evaluate && appElement) {
-        try {
-            console.log('Trying Alpine.evaluate method');
-            Alpine.evaluate(appElement, `updateSort('${column}')`);
+    // Use Alpine's global store approach for more reliable communication
+    const appElement = document.querySelector('[x-data="collectionApp()"]');
+    if (appElement && appElement._x_dataStack && appElement._x_dataStack[0]) {
+        const app = appElement._x_dataStack[0];
+        if (app && typeof app.updateSort === 'function') {
+            console.log('Calling updateSort via _x_dataStack');
+            app.updateSort(column);
             return;
-        } catch (e) {
-            console.log('Alpine.evaluate failed:', e);
         }
     }
     
-    // Method 3: Dispatch a custom event that Alpine can listen to
+    // Fallback: dispatch custom event
     console.log('Dispatching custom sort event');
     document.dispatchEvent(new CustomEvent('sort-column', { 
         detail: { column: column } 
@@ -373,57 +368,43 @@ window.updateSort = function(column) {
 };
 
 window.changePage = function(page) {
-    // Wait for Alpine.js to be ready
-    if (typeof Alpine !== 'undefined' && Alpine.$data) {
-        const appElement = document.querySelector('[x-data]');
-        if (appElement) {
-            const app = Alpine.$data(appElement);
-            if (app && app.changePage) {
-                app.changePage(page);
-                return;
-            }
+    console.log('changePage called with page:', page);
+    
+    const appElement = document.querySelector('[x-data="collectionApp()"]');
+    if (appElement && appElement._x_dataStack && appElement._x_dataStack[0]) {
+        const app = appElement._x_dataStack[0];
+        if (app && typeof app.changePage === 'function') {
+            console.log('Calling changePage via _x_dataStack');
+            app.changePage(page);
+            return;
         }
     }
     
-    // Fallback: retry after a short delay if Alpine isn't ready
-    setTimeout(() => {
-        if (typeof Alpine !== 'undefined' && Alpine.$data) {
-            const appElement = document.querySelector('[x-data]');
-            if (appElement) {
-                const app = Alpine.$data(appElement);
-                if (app && app.changePage) {
-                    app.changePage(page);
-                }
-            }
-        }
-    }, 100);
+    // Fallback: dispatch custom event
+    console.log('Dispatching custom page-change event');
+    document.dispatchEvent(new CustomEvent('page-change', { 
+        detail: { page: page } 
+    }));
 };
 
 window.changePosterPage = function(page) {
-    // Wait for Alpine.js to be ready
-    if (typeof Alpine !== 'undefined' && Alpine.$data) {
-        const appElement = document.querySelector('[x-data]');
-        if (appElement) {
-            const app = Alpine.$data(appElement);
-            if (app && app.changePosterPage) {
-                app.changePosterPage(page);
-                return;
-            }
+    console.log('changePosterPage called with page:', page);
+    
+    const appElement = document.querySelector('[x-data="collectionApp()"]');
+    if (appElement && appElement._x_dataStack && appElement._x_dataStack[0]) {
+        const app = appElement._x_dataStack[0];
+        if (app && typeof app.changePosterPage === 'function') {
+            console.log('Calling changePosterPage via _x_dataStack');
+            app.changePosterPage(page);
+            return;
         }
     }
     
-    // Fallback: retry after a short delay if Alpine isn't ready
-    setTimeout(() => {
-        if (typeof Alpine !== 'undefined' && Alpine.$data) {
-            const appElement = document.querySelector('[x-data]');
-            if (appElement) {
-                const app = Alpine.$data(appElement);
-                if (app && app.changePosterPage) {
-                    app.changePosterPage(page);
-                }
-            }
-        }
-    }, 100);
+    // Fallback: dispatch custom event
+    console.log('Dispatching custom poster-page-change event');
+    document.dispatchEvent(new CustomEvent('poster-page-change', { 
+        detail: { page: page } 
+    }));
 };
 
 // Add event listeners for pagination buttons
