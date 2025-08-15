@@ -251,7 +251,7 @@
     </main>
 
     <!-- Global Search Modal -->
-    <div id="search-modal" class="fixed inset-0 z-50 hidden">
+    <div id="search-modal" class="fixed inset-0 z-[9998] hidden">
         <div class="modal-backdrop fixed inset-0" onclick="closeSearchModal()"></div>
         <div class="fixed inset-0 flex items-center justify-center p-4">
             <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl max-w-5xl w-full max-h-[85vh] overflow-hidden border border-white/20 pulse-glow">
@@ -280,7 +280,7 @@
     </div>
 
     <!-- Card Details Modal -->
-    <div id="card-details-modal" class="fixed inset-0 z-70 hidden">
+    <div id="card-details-modal" class="fixed inset-0 z-[9999] hidden">
         <div class="modal-backdrop fixed inset-0" onclick="closeCardDetailsModal()"></div>
         <div class="fixed inset-0 flex items-center justify-center p-4">
             <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto border border-white/20 pulse-glow">
@@ -292,7 +292,7 @@
     </div>
 
     <!-- Global Loading Indicator -->
-    <div id="global-loading" class="htmx-indicator fixed top-4 right-4 z-50" style="display: none !important;">
+    <div id="global-loading" class="htmx-indicator fixed top-4 right-4 z-[9997]" style="display: none !important;">
         <div class="electric-gradient text-white px-6 py-3 rounded-xl shadow-xl flex items-center space-x-3 pulse-glow">
             <div class="spinner border-white border-t-transparent w-5 h-5"></div>
             <span class="text-sm font-medium">Loading...</span>

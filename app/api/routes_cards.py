@@ -260,6 +260,16 @@ async def get_collection_poster_view(
         
         results = session.exec(query).all()
         
+        # Fetch latest price for each card (same as table view)
+        results_with_prices = []
+        for entry, card in results:
+            latest_price = session.exec(
+                select(PriceSnapshot)
+                .where(PriceSnapshot.card_id == card.id)
+                .order_by(PriceSnapshot.as_of_date.desc())
+            ).first()
+            results_with_prices.append((entry, card, latest_price))
+        
         # Calculate pagination info
         total_pages = (total_count + page_size - 1) // page_size
         has_prev = page > 1
@@ -282,7 +292,7 @@ async def get_collection_poster_view(
             "_collection_poster.html",
             {
                 "request": request,
-                "results": results,
+                "results": results_with_prices,
                 "total_count": total_count,
                 "page": page,
                 "page_size": page_size,

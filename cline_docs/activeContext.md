@@ -1,6 +1,83 @@
 # Active Context - Pokémon Card Cataloguer
 
 ## Current Focus/Issues
+**✅ CRITICAL UI BUGS FIXED (August 15, 2025)**:
+
+### **1. MODAL Z-INDEX LAYERING BUG RESOLVED**:
+The card details modal z-index layering issue has been **completely fixed**. The modal now properly appears on top of all other content.
+
+**Fix Applied**:
+- **Updated Z-Index Values**: Used Tailwind's arbitrary value syntax for maximum z-index
+- **Card Details Modal**: Changed from `z-70` to `z-[9999]` (z-index: 9999)
+- **Search Modal**: Changed from `z-50` to `z-[9998]` (z-index: 9998)
+- **Loading Indicator**: Changed from `z-50` to `z-[9997]` (z-index: 9997)
+- **Result**: Modal now appears above all other page elements including tables
+
+**Technical Details**:
+- Used Tailwind CSS arbitrary value syntax `z-[9999]` for maximum compatibility
+- Ensured proper layering hierarchy: Card Details > Search > Loading > All Other Content
+- No conflicts with existing page elements or navigation components
+
+### **2. POSTER VIEW DETAILS BUG RESOLVED**:
+The poster view Details button was not working because the route wasn't providing pricing data properly.
+
+**Root Cause Identified**:
+- **Poster View Route**: `/api/collection/poster` in `routes_cards.py` was only returning `(entry, card)` tuples
+- **Table View Route**: `/api/collection` in `routes_collection.py` was correctly returning `(entry, card, latest_price)` tuples
+- **Template Mismatch**: Poster template expected pricing data but wasn't receiving it
+
+**Fix Applied**:
+- **Updated Poster Route**: Modified `get_collection_poster_view()` to fetch latest price for each card
+- **Updated Template Loop**: Changed from `{% for entry, card in results %}` to `{% for entry, card, latest_price in results %}`
+- **Consistent Data Structure**: Both table and poster views now use identical data structure
+- **Result**: Details button in poster view now works identically to table view
+
+**Technical Details**:
+- Added price fetching logic to poster view route (same as table view)
+- Removed hardcoded `{% set latest_price = None %}` from template
+- Both views now have consistent HTMX functionality for card details modal
+
+### **3. TABLE REFRESH BUG RESOLVED (August 15, 2025)**:
+The collection table was not automatically refreshing when cards were added through the search modal.
+
+**Root Cause Identified**:
+- **JavaScript Event Listener**: The `htmx:afterRequest` event listener in `index.html` had flawed path checking logic
+- **Path Matching Issues**: The logic didn't properly handle `/api/select-card` endpoint used by search results
+- **Incomplete Refresh**: Cards were added to database but UI didn't update until manual page refresh
+
+**Fix Applied**:
+- **Improved Path Detection**: Rewrote the event listener with more robust path checking
+- **Added Missing Endpoints**: Now properly handles `/api/collection`, `/api/select-card`, and `/api/preview-card`
+- **Better Pattern Matching**: Uses regex to match collection entry updates (`/api/collection/\d+`)
+- **Enhanced Error Handling**: Added null checks for Alpine.js app instance and methods
+
+**Technical Details**:
+```javascript
+// Before: Flawed path checking
+if (event.detail.pathInfo.requestPath === '/api/collection' || 
+    event.detail.pathInfo.requestPath === '/api/select-card' || ...)
+
+// After: Robust path detection
+const isCardAddition = (
+    status === 200 && (
+        path === '/api/collection' ||
+        path === '/api/select-card' ||
+        path === '/api/preview-card' ||
+        (path.startsWith('/api/collection/') && 
+         path.match(/^\/api\/collection\/\d+$/) && // Update specific entry
+         !path.includes('/stats') &&
+         !path.includes('/poster'))
+    )
+);
+```
+
+**Result**: 
+- Cards added through search now automatically refresh the collection table
+- Collection summary stats update immediately
+- Search modal closes automatically after successful addition
+- Works for both "Add Directly" and "Preview Card" → "Add to Collection" flows
+
+### **PREVIOUS COMPLETED WORK**:
 **🎯 MEMORY BANK UPDATE AND README REFRESH (August 15, 2025)**:
 
 ### **✅ MEMORY BANK REVIEW COMPLETED**:
@@ -25,6 +102,8 @@ The README needs to be completely rewritten to reflect:
 - The improved user experience throughout
 
 The README should be written from a user's perspective, explaining what the application does for them and how it enhances their Pokémon card collecting experience.
+
+**READY**: Modal bug fixed, can now proceed with README updates and other tasks.
 
 ## Recent Changes Summary (August 15, 2025)
 

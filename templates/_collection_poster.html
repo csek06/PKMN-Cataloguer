@@ -1,8 +1,7 @@
 {% if results %}
 <div class="p-6">
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-        {% for entry, card in results %}
-        {% set latest_price = None %}
+        {% for entry, card, latest_price in results %}
         <div class="relative group card-hover transition-transform duration-200">
             <!-- Card Image -->
             <div class="aspect-[2.5/3.5] bg-gray-100 rounded-lg overflow-hidden shadow-md relative">
