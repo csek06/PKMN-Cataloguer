@@ -344,22 +344,13 @@ async def get_collection(
             .subquery()
         )
         
-        # Build unified query with price data for sorting
-        if sort in ["ungraded_price", "psa10_price"]:
-            # For price sorting, we need to join with latest prices
-            query = (
-                select(CollectionEntry, Card, latest_prices.c.ungraded_cents, latest_prices.c.psa10_cents)
-                .select_from(CollectionEntry)
-                .join(Card, CollectionEntry.card_id == Card.id)
-                .outerjoin(latest_prices, CollectionEntry.card_id == latest_prices.c.card_id)
-            )
-        else:
-            # For non-price sorting, use simpler query
-            query = (
-                select(CollectionEntry, Card)
-                .select_from(CollectionEntry)
-                .join(Card, CollectionEntry.card_id == Card.id)
-            )
+        # Build unified query - always include price data for consistency
+        query = (
+            select(CollectionEntry, Card, latest_prices.c.ungraded_cents, latest_prices.c.psa10_cents)
+            .select_from(CollectionEntry)
+            .join(Card, CollectionEntry.card_id == Card.id)
+            .outerjoin(latest_prices, CollectionEntry.card_id == latest_prices.c.card_id)
+        )
         
         # Apply filters
         if name:
@@ -444,33 +435,23 @@ async def get_collection(
         
         results = session.exec(query).all()
         
-        # Process results based on query type
+        # Process results - unified query always returns (entry, card, ungraded_cents, psa10_cents)
         results_with_prices = []
-        if sort in ["ungraded_price", "psa10_price"]:
-            # Price sorting query returns (entry, card, ungraded_cents, psa10_cents)
-            for result in results:
-                entry, card, ungraded_cents, psa10_cents = result
-                # Create a price object from the joined data
-                if ungraded_cents is not None or psa10_cents is not None:
-                    # Create a mock price snapshot object for template compatibility
-                    class MockPriceSnapshot:
-                        def __init__(self, ungraded_cents, psa10_cents):
-                            self.ungraded_cents = ungraded_cents
-                            self.psa10_cents = psa10_cents
-                    
-                    latest_price = MockPriceSnapshot(ungraded_cents, psa10_cents)
-                else:
-                    latest_price = None
-                results_with_prices.append((entry, card, latest_price))
-        else:
-            # Regular sorting query returns (entry, card)
-            for entry, card in results:
-                latest_price = session.exec(
-                    select(PriceSnapshot)
-                    .where(PriceSnapshot.card_id == card.id)
-                    .order_by(PriceSnapshot.as_of_date.desc())
-                ).first()
-                results_with_prices.append((entry, card, latest_price))
+        for result in results:
+            entry, card, ungraded_cents, psa10_cents = result
+            # Create a price object from the joined data
+            if ungraded_cents is not None or psa10_cents is not None:
+                # Create a mock price snapshot object for template compatibility
+                class MockPriceSnapshot:
+                    def __init__(self, ungraded_cents, psa10_cents):
+                        self.ungraded_cents = ungraded_cents
+                        self.psa10_cents = psa10_cents
+                        self.as_of_date = datetime.utcnow().date()  # Add missing attribute
+                
+                latest_price = MockPriceSnapshot(ungraded_cents, psa10_cents)
+            else:
+                latest_price = None
+            results_with_prices.append((entry, card, latest_price))
         
         # Calculate pagination info
         total_pages = (total_count + page_size - 1) // page_size
