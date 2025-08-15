@@ -9,7 +9,7 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Left Column: Card Image and Artwork Info -->
+        <!-- Left Column: Card Image and Metadata -->
         <div class="space-y-6">
             <!-- Card Image -->
             <div class="flex justify-center">
@@ -37,112 +37,6 @@
                 </div>
                 {% endif %}
             </div>
-            {% endif %}
-
-            <!-- Basic Card Info -->
-            <div class="bg-gray-50 rounded-lg p-4 space-y-3">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <dt class="text-sm font-medium text-gray-500">Set</dt>
-                        <dd class="text-sm text-gray-900">{{ card.set_name }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-sm font-medium text-gray-500">Number</dt>
-                        <dd class="text-sm text-gray-900">#{{ card.number }}</dd>
-                    </div>
-                    {% if card.rarity %}
-                    <div>
-                        <dt class="text-sm font-medium text-gray-500">Rarity</dt>
-                        <dd class="text-sm text-gray-900">
-                            {% set rarity_styles = {
-                                'Common': 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-md',
-                                'Uncommon': 'bg-gradient-to-r from-green-400 to-green-600 text-white shadow-md',
-                                'Rare': 'bg-gradient-to-r from-blue-400 to-blue-600 text-white shadow-md',
-                                'Rare Holo': 'bg-gradient-to-r from-purple-400 to-purple-600 text-white shadow-lg',
-                                'Ultra Rare': 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg',
-                                'Secret Rare': 'bg-gradient-to-r from-pink-400 to-red-500 text-white shadow-lg',
-                                'Special Illustration Rare': 'bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-500 text-white shadow-xl',
-                                'Rare Holo EX': 'bg-gradient-to-r from-orange-400 to-red-500 text-white shadow-lg',
-                                'Rare Holo GX': 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white shadow-lg',
-                                'Rare Holo V': 'bg-gradient-to-r from-emerald-400 to-teal-500 text-white shadow-lg',
-                                'Rare Holo VMAX': 'bg-gradient-to-r from-violet-400 to-purple-600 text-white shadow-xl'
-                            } %}
-                            {% set default_style = 'bg-gradient-to-r from-gray-400 to-gray-600 text-white shadow-md' %}
-                            <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide {{ rarity_styles.get(card.rarity, default_style) }} transform hover:scale-105 transition-all duration-200">
-                                {% if card.rarity in ['Secret Rare', 'Special Illustration Rare', 'Ultra Rare'] %}
-                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                                </svg>
-                                {% elif 'Holo' in card.rarity %}
-                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"></path>
-                                </svg>
-                                {% endif %}
-                                {{ card.rarity }}
-                            </span>
-                        </dd>
-                    </div>
-                    {% endif %}
-                    {% if card.supertype %}
-                    <div>
-                        <dt class="text-sm font-medium text-gray-500">Category</dt>
-                        <dd class="text-sm text-gray-900">{{ card.supertype }}</dd>
-                    </div>
-                    {% endif %}
-                </div>
-                
-                {% if card.subtypes %}
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Subtypes</dt>
-                    <dd class="text-sm text-gray-900">{{ card.subtypes|join(', ') }}</dd>
-                </div>
-                {% endif %}
-                
-                {% if card.release_date %}
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Release Date</dt>
-                    <dd class="text-sm text-gray-900">{{ card.release_date.strftime('%B %d, %Y') }}</dd>
-                </div>
-                {% endif %}
-            </div>
-
-            <!-- External Links -->
-            <div class="space-y-2">
-                <h3 class="text-sm font-medium text-gray-900">External Links</h3>
-                <div class="flex flex-wrap gap-2">
-                    <a 
-                        href="{{ external_links.tcg_api }}" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        class="inline-flex items-center px-3 py-1 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                        </svg>
-                        TCGPlayer
-                    </a>
-                    {% if external_links.pricecharting %}
-                    <a 
-                        href="{{ external_links.pricecharting }}" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        class="inline-flex items-center px-3 py-1 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                        </svg>
-                        PriceCharting
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Right Column: Collection Info and Pricing -->
-        <div class="space-y-6">
-            <!-- Collection Info -->
-            {% if collection_entry %}
-            {% include '_collection_info_section.html' %}
             {% endif %}
 
             <!-- Pokemon Stats -->
@@ -365,6 +259,82 @@
                 </div>
             </div>
             {% endif %}
+        </div>
+
+        <!-- Right Column: Collection Info and Pricing -->
+        <div class="space-y-6">
+            <!-- Collection Info -->
+            {% if collection_entry %}
+            {% include '_collection_info_section.html' %}
+            {% endif %}
+
+            <!-- Set Information -->
+            <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                <h3 class="text-sm font-medium text-gray-900 mb-3">Set Information</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Set</dt>
+                        <dd class="text-sm text-gray-900">{{ card.set_name }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Number</dt>
+                        <dd class="text-sm text-gray-900">#{{ card.number }}</dd>
+                    </div>
+                    {% if card.rarity %}
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Rarity</dt>
+                        <dd class="text-sm text-gray-900">
+                            {% set rarity_styles = {
+                                'Common': 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-md',
+                                'Uncommon': 'bg-gradient-to-r from-green-400 to-green-600 text-white shadow-md',
+                                'Rare': 'bg-gradient-to-r from-blue-400 to-blue-600 text-white shadow-md',
+                                'Rare Holo': 'bg-gradient-to-r from-purple-400 to-purple-600 text-white shadow-lg',
+                                'Ultra Rare': 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg',
+                                'Secret Rare': 'bg-gradient-to-r from-pink-400 to-red-500 text-white shadow-lg',
+                                'Special Illustration Rare': 'bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-500 text-white shadow-xl',
+                                'Rare Holo EX': 'bg-gradient-to-r from-orange-400 to-red-500 text-white shadow-lg',
+                                'Rare Holo GX': 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white shadow-lg',
+                                'Rare Holo V': 'bg-gradient-to-r from-emerald-400 to-teal-500 text-white shadow-lg',
+                                'Rare Holo VMAX': 'bg-gradient-to-r from-violet-400 to-purple-600 text-white shadow-xl'
+                            } %}
+                            {% set default_style = 'bg-gradient-to-r from-gray-400 to-gray-600 text-white shadow-md' %}
+                            <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide {{ rarity_styles.get(card.rarity, default_style) }} transform hover:scale-105 transition-all duration-200">
+                                {% if card.rarity in ['Secret Rare', 'Special Illustration Rare', 'Ultra Rare'] %}
+                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                </svg>
+                                {% elif 'Holo' in card.rarity %}
+                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"></path>
+                                </svg>
+                                {% endif %}
+                                {{ card.rarity }}
+                            </span>
+                        </dd>
+                    </div>
+                    {% endif %}
+                    {% if card.supertype %}
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Category</dt>
+                        <dd class="text-sm text-gray-900">{{ card.supertype }}</dd>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if card.subtypes %}
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Subtypes</dt>
+                    <dd class="text-sm text-gray-900">{{ card.subtypes|join(', ') }}</dd>
+                </div>
+                {% endif %}
+                
+                {% if card.release_date %}
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Release Date</dt>
+                    <dd class="text-sm text-gray-900">{{ card.release_date.strftime('%B %d, %Y') }}</dd>
+                </div>
+                {% endif %}
+            </div>
 
             <!-- Current Pricing -->
             {% if has_pricing and latest_price %}
@@ -408,6 +378,37 @@
                 <p class="text-sm text-gray-500">No pricing data available for this card.</p>
             </div>
             {% endif %}
+
+            <!-- External Links -->
+            <div class="space-y-2">
+                <h3 class="text-sm font-medium text-gray-900">External Links</h3>
+                <div class="flex flex-wrap gap-2">
+                    <a 
+                        href="{{ external_links.tcg_api }}" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center px-3 py-1 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                        </svg>
+                        TCGPlayer
+                    </a>
+                    {% if external_links.pricecharting %}
+                    <a 
+                        href="{{ external_links.pricecharting }}" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center px-3 py-1 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        </svg>
+                        PriceCharting
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
 
             <!-- Price History Chart -->
             {% if has_pricing %}
