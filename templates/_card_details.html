@@ -17,7 +17,7 @@
                     src="{{ card.image_large }}" 
                     alt="{{ card.name }}"
                     class="max-w-full h-auto rounded-lg shadow-lg border-2 border-gray-200"
-                    style="max-height: 400px;"
+                    style="max-height: 400px"
                 >
             </div>
 
@@ -163,8 +163,9 @@
                             <span class="text-sm font-bold text-red-900">{{ card.hp }}</span>
                         </div>
                         <div class="w-full bg-red-200 rounded-full h-2">
-                            <div class="bg-gradient-to-r from-red-500 to-red-600 h-2 rounded-full transition-all duration-300" 
-                                 style="width: {{ (card.hp / 300 * 100)|round }}%"></div>
+                            {% set hp_percentage = ((card.hp|int / 300 * 100)|round)|default(0) %}
+                            <div class="bg-gradient-to-r from-red-500 to-red-600 h-2 rounded-full transition-all duration-300 hp-bar" 
+                                 data-width="{{ hp_percentage }}"></div>
                         </div>
                     </div>
                     {% endif %}
@@ -420,6 +421,19 @@
         </div>
     </div>
 </div>
+
+<script>
+// Set HP bar width from data attribute
+document.addEventListener('DOMContentLoaded', function() {
+    const hpBars = document.querySelectorAll('.hp-bar');
+    hpBars.forEach(bar => {
+        const width = bar.getAttribute('data-width');
+        if (width) {
+            bar.style.width = width + '%';
+        }
+    });
+});
+</script>
 
 {% if has_pricing %}
 <script>
