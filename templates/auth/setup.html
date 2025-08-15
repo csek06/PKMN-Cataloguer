@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup - Pokémon Card Cataloguer</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        /* Custom Pokémon-themed animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); }
+        }
+        
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .pulse-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        
+        /* Pokéball gradient */
+        .pokeball-gradient {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #ffffff 50%, #f3f4f6 100%);
+        }
+        
+        /* Electric gradient for buttons */
+        .electric-gradient {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+        }
+        
+        /* Water gradient for form */
+        .water-gradient {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 50%, #1e40af 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 flex items-center justify-center p-4">
+    <!-- Floating decorative elements -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-20 left-20 w-16 h-16 pokeball-gradient rounded-full float-animation opacity-20"></div>
+        <div class="absolute top-40 right-32 w-12 h-12 bg-yellow-400 rounded-full float-animation opacity-30" style="animation-delay: 1s;"></div>
+        <div class="absolute bottom-32 left-32 w-20 h-20 bg-red-400 rounded-full float-animation opacity-25" style="animation-delay: 2s;"></div>
+        <div class="absolute bottom-20 right-20 w-14 h-14 bg-green-400 rounded-full float-animation opacity-20" style="animation-delay: 0.5s;"></div>
+    </div>
+
+    <!-- Main setup card -->
+    <div class="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8 w-full max-w-md relative overflow-hidden pulse-glow">
+        <!-- Header gradient overlay -->
+        <div class="absolute top-0 left-0 right-0 h-32 water-gradient opacity-10 rounded-t-3xl"></div>
+        
+        <!-- Pokéball icon -->
+        <div class="relative z-10 flex justify-center mb-6">
+            <div class="w-20 h-20 pokeball-gradient rounded-full flex items-center justify-center shadow-lg">
+                <div class="w-8 h-8 bg-white rounded-full border-4 border-gray-800"></div>
+            </div>
+        </div>
+        
+        <!-- Title -->
+        <div class="relative z-10 text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Welcome, Trainer!</h1>
+            <p class="text-gray-600">Set up your Pokémon Card Cataloguer to begin your collection journey</p>
+        </div>
+        
+        <!-- Error message -->
+        {% if error %}
+        <div class="relative z-10 bg-red-50 border-l-4 border-red-400 p-4 mb-6 rounded-r-lg">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-red-700">{{ error }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Setup form -->
+        <form method="post" action="/setup" class="relative z-10 space-y-6">
+            <!-- Username field -->
+            <div>
+                <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
+                    Choose your Trainer Name
+                </label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    name="username" 
+                    value="{{ username or '' }}"
+                    required 
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                    placeholder="Enter your username"
+                    autocomplete="username"
+                >
+            </div>
+            
+            <!-- Password field -->
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                    Create your Password
+                </label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    required 
+                    minlength="6"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                    placeholder="At least 6 characters"
+                    autocomplete="new-password"
+                >
+            </div>
+            
+            <!-- Confirm password field -->
+            <div>
+                <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-2">
+                    Confirm your Password
+                </label>
+                <input 
+                    type="password" 
+                    id="confirm_password" 
+                    name="confirm_password" 
+                    required 
+                    minlength="6"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                    placeholder="Confirm your password"
+                    autocomplete="new-password"
+                >
+            </div>
+            
+            <!-- Submit button -->
+            <button 
+                type="submit" 
+                class="w-full electric-gradient text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
+            >
+                <span class="flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    Start Your Journey!
+                </span>
+            </button>
+        </form>
+        
+        <!-- Footer -->
+        <div class="relative z-10 text-center mt-8 pt-6 border-t border-gray-200">
+            <p class="text-sm text-gray-500">
+                Ready to catch 'em all? 🎴
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        // Password confirmation validation
+        document.getElementById('confirm_password').addEventListener('input', function() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = this.value;
+            
+            if (confirmPassword && password !== confirmPassword) {
+                this.setCustomValidity('Passwords do not match');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+        
+        // Real-time password validation
+        document.getElementById('password').addEventListener('input', function() {
+            const confirmPassword = document.getElementById('confirm_password');
+            if (confirmPassword.value) {
+                confirmPassword.dispatchEvent(new Event('input'));
+            }
+        });
+    </script>
+</body>
+</html>

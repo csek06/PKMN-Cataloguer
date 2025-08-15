@@ -127,6 +127,16 @@ class JobHistory(SQLModel, table=True):
     job_metadata: Optional[dict] = Field(default=None, sa_column=Column(JSON))
 
 
+class User(SQLModel, table=True):
+    """User authentication model for single-user application."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    username: str = Field(unique=True, index=True)
+    password_hash: str
+    is_setup_complete: bool = Field(default=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
 class AppSettings(SQLModel, table=True):
     """Application settings stored in database with UI management."""
     id: Optional[int] = Field(default=None, primary_key=True)

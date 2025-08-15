@@ -4,6 +4,7 @@ A single-user Pokémon card collection manager with real-time pricing integratio
 
 ## Features
 
+- **🔐 Secure Authentication**: Beautiful Pokémon-themed login system with password management
 - **🔍 Natural Language Search**: Type queries like "buzzwole gx 57/111" or "charizard base set" to find cards
 - **📊 Dual View Modes**: Table view for detailed management, poster view for visual browsing  
 - **💰 Real-time Pricing**: Live market prices from PriceCharting during search and collection viewing
@@ -32,7 +33,13 @@ A single-user Pokémon card collection manager with real-time pricing integratio
 3. **Access the Application**
    Open http://localhost:8000
 
-4. **Start Collecting**
+4. **First-Time Setup**
+   - On first visit, you'll be redirected to a beautiful setup page
+   - Choose your username (Trainer Name)
+   - Create a secure password (minimum 6 characters)
+   - Click "Start Your Journey!" to create your account
+
+5. **Start Collecting**
    - Search for cards using natural language
    - Click "Add to Collection" from search results
    - Manage quantities with +/- buttons
@@ -56,6 +63,77 @@ The application uses **PriceCharting as the single source of truth** for both ca
 - **Scheduling**: APScheduler for automated price updates
 - **Logging**: Structured file-based logging with rotation
 - **Deployment**: Docker with single container
+
+## Authentication
+
+### First-Time Setup
+On your first visit to the application, you'll be automatically redirected to a beautiful Pokémon-themed setup page where you can create your account:
+
+1. **Choose Username**: Enter your desired username (referred to as "Trainer Name")
+2. **Create Password**: Set a secure password (minimum 6 characters)
+3. **Confirm Password**: Re-enter your password for verification
+4. **Start Your Journey**: Click the button to create your account and automatically log in
+
+### Login System
+- **Beautiful Interface**: Pokémon-themed login page with sparkle animations and Pokéball design
+- **Secure Authentication**: Passwords are hashed using bcrypt with automatic salt generation
+- **Session Management**: 7-day JWT session tokens stored in secure HttpOnly cookies
+- **Remember Login**: Stay logged in across browser sessions until token expires
+
+### Password Management
+Access password management through the user menu (click your username in the top-right corner):
+
+- **Change Password**: Update your password anytime from the user dropdown menu
+- **Current Password Required**: Must enter current password for security (unless using admin reset)
+- **Password Confirmation**: New password must be confirmed to prevent typos
+- **Instant Updates**: Password changes take effect immediately
+
+### Account Lockout Recovery
+If you forget your password or get locked out of your account, you can use the emergency admin reset feature:
+
+#### Emergency Access Procedure
+1. **Set Environment Variable**: Add `ADMIN_RESET_PASSWORD=your_emergency_password` to your environment
+   - **Docker Compose**: Add to `.env` file: `ADMIN_RESET_PASSWORD=emergency123`
+   - **Docker Run**: Add `-e ADMIN_RESET_PASSWORD=emergency123` to your docker run command
+   - **Local Development**: Add to `.env` file or export as environment variable
+
+2. **Restart Application**: Restart your container or application to load the new environment variable
+   ```bash
+   # Docker Compose
+   docker compose down && docker compose up -d
+   
+   # Docker Run
+   docker restart pokemon-cataloguer
+   ```
+
+3. **Login with Emergency Password**: 
+   - Go to the login page
+   - Enter **any username** (it will be ignored)
+   - Enter your emergency password in the password field
+   - Click "Sign In"
+
+4. **Forced Password Change**: You'll be automatically redirected to change your password
+   - The system will force you to set a new secure password
+   - No current password verification required during emergency reset
+   - Choose a strong password you'll remember
+
+5. **Remove Emergency Variable**: After regaining access, remove the `ADMIN_RESET_PASSWORD` environment variable for security
+   - Delete the line from your `.env` file
+   - Restart the application to ensure the emergency access is disabled
+
+#### Security Notes
+- **Temporary Access**: The emergency password should only be used for account recovery
+- **Remove After Use**: Always remove the `ADMIN_RESET_PASSWORD` variable after regaining access
+- **Strong Emergency Password**: Use a secure emergency password different from your regular password
+- **Single User**: This emergency access works for the single user account in the system
+
+### Authentication Security Features
+- **Bcrypt Password Hashing**: Industry-standard password security with automatic salt generation
+- **JWT Session Tokens**: Secure session management with 7-day expiration
+- **HttpOnly Cookies**: Session tokens stored securely to prevent XSS attacks
+- **Route Protection**: All application pages and APIs require valid authentication
+- **Automatic Redirects**: Unauthenticated users automatically redirected to login
+- **Session Validation**: Every request validates the current session token
 
 ## Configuration
 

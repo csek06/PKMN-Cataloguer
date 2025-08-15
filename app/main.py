@@ -14,7 +14,7 @@ from app.logging import (
     AccessLogMiddleware,
     get_logger
 )
-from app.api import routes_search, routes_collection, routes_cards, routes_admin, routes_settings
+from app.api import routes_search, routes_collection, routes_cards, routes_admin, routes_settings, routes_auth
 from app.ui import pages
 from app.services.pricing_refresh import pricing_refresh_service
 from app.services.metadata_refresh import metadata_refresh_service
@@ -82,6 +82,7 @@ app.add_middleware(AccessLogMiddleware)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Include routers
+app.include_router(routes_auth.router)
 app.include_router(pages.router)
 app.include_router(routes_search.router)
 app.include_router(routes_collection.router)
