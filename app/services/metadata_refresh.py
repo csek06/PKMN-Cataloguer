@@ -231,19 +231,37 @@ class MetadataRefreshService:
                     )
                 else:
                     # Refresh cards that need metadata updates
-                    # Priority: cards without api_id, then cards with old sync dates
+                    # Only select cards that are missing critical metadata or have never been synced
                     query = (
                         select(Card)
                         .where(
-                            (Card.api_id.is_(None)) |  # Cards without API ID
-                            (Card.api_last_synced_at.is_(None)) |  # Never synced
-                            (Card.hp.is_(None))  # Missing basic metadata
+                            # Cards that have never been synced with the API
+                            (Card.api_last_synced_at.is_(None)) |
+                            # Cards without API ID (need to be searched and matched)
+                            (Card.api_id.is_(None)) |
+                            # Cards missing core metadata fields that should be present after sync
+                            (
+                                Card.api_last_synced_at.is_not(None) &  # Has been synced before
+                                Card.api_id.is_not(None) &  # Has API ID
+                                (
+                                    Card.rarity.is_(None) |  # Missing rarity
+                                    Card.supertype.is_(None) |  # Missing supertype
+                                    Card.api_image_small.is_(None) |  # Missing API images
+                                    Card.api_image_large.is_(None)
+                                )
+                            )
                         )
                         .order_by(Card.api_last_synced_at.asc().nullsfirst())
                         .limit(settings.price_refresh_batch_size)
                     )
                 
                 results = session.exec(query).all()
+                logger.info(
+                    "metadata_cards_selected_for_refresh",
+                    count=len(results),
+                    card_ids_requested=card_ids is not None,
+                    specific_count=len(card_ids) if card_ids else None
+                )
                 return results
         except Exception as e:
             logger.error("get_cards_for_metadata_refresh_error", error=str(e), exc_info=True)
