@@ -24,19 +24,22 @@
                     <!-- Card Image -->
                     <div class="flex justify-center">
                         {% if card.image_large or card.image_small %}
-                        <img 
-                            src="{{ card.image_large or card.image_small }}" 
-                            alt="{{ card.name }}"
-                            class="max-w-full h-auto rounded-lg shadow-lg border-2 border-gray-200"
-                            style="max-height: 450px;"
-                            onerror="handleImageError(this, '{{ image_url or '' }}')"
-                        >
-                        <div class="w-64 h-80 bg-gray-200 rounded-lg flex items-center justify-center border-2 border-gray-300" style="display: none;">
-                            <div class="text-center">
-                                <svg class="w-16 h-16 text-gray-400 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
-                                </svg>
-                                <p class="text-sm text-gray-500">Image not available</p>
+                        <div class="relative">
+                            <img 
+                                src="{{ card.image_large or card.image_small }}" 
+                                alt="{{ card.name }}"
+                                class="max-w-full h-auto rounded-lg shadow-lg border-2 border-gray-200"
+                                style="max-height: 450px;"
+                                data-fallback-url="{{ image_url or '' }}"
+                                onerror="handleImageError(this)"
+                            >
+                            <div class="w-64 h-80 bg-gray-200 rounded-lg flex items-center justify-center border-2 border-gray-300" style="display: none;">
+                                <div class="text-center">
+                                    <svg class="w-16 h-16 text-gray-400 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <p class="text-sm text-gray-500">Image not available</p>
+                                </div>
                             </div>
                         </div>
                         {% else %}
@@ -134,18 +137,7 @@
                                 <span class="text-sm font-medium text-red-700 block mb-2">Types</span>
                                 <div class="flex flex-wrap gap-1">
                                     {% for type in card.types %}
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                                        {% if type == 'Fire' %}bg-red-100 text-red-800
-                                        {% elif type == 'Water' %}bg-blue-100 text-blue-800
-                                        {% elif type == 'Grass' %}bg-green-100 text-green-800
-                                        {% elif type == 'Electric' %}bg-yellow-100 text-yellow-800
-                                        {% elif type == 'Psychic' %}bg-purple-100 text-purple-800
-                                        {% elif type == 'Fighting' %}bg-orange-100 text-orange-800
-                                        {% elif type == 'Dark' %}bg-gray-100 text-gray-800
-                                        {% elif type == 'Metal' %}bg-gray-100 text-gray-700
-                                        {% elif type == 'Fairy' %}bg-pink-100 text-pink-800
-                                        {% elif type == 'Dragon' %}bg-indigo-100 text-indigo-800
-                                        {% else %}bg-gray-100 text-gray-600{% endif %}">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {% if type == 'Fire' %}bg-red-100 text-red-800{% elif type == 'Water' %}bg-blue-100 text-blue-800{% elif type == 'Grass' %}bg-green-100 text-green-800{% elif type == 'Electric' %}bg-yellow-100 text-yellow-800{% elif type == 'Psychic' %}bg-purple-100 text-purple-800{% elif type == 'Fighting' %}bg-orange-100 text-orange-800{% elif type == 'Dark' %}bg-gray-100 text-gray-800{% elif type == 'Metal' %}bg-gray-100 text-gray-700{% elif type == 'Fairy' %}bg-pink-100 text-pink-800{% elif type == 'Dragon' %}bg-indigo-100 text-indigo-800{% else %}bg-gray-100 text-gray-600{% endif %}">
                                         {{ type }}
                                     </span>
                                     {% endfor %}
@@ -340,34 +332,6 @@
                         {% endif %}
                     </div>
 
-                    <!-- External Links -->
-                    <div class="flex flex-wrap gap-3">
-                        {% if card.pc_url %}
-                        <a 
-                            href="{{ card.pc_url }}" 
-                            target="_blank" 
-                            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-                            </svg>
-                            PriceCharting
-                        </a>
-                        {% endif %}
-                        
-                        {% if card.tcgplayer_url %}
-                        <a 
-                            href="{{ card.tcgplayer_url }}" 
-                            target="_blank" 
-                            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd"/>
-                            </svg>
-                            TCGPlayer
-                        </a>
-                        {% endif %}
-                    </div>
                 </div>
 
                 <!-- Right Column: Pricing Information -->
@@ -437,6 +401,35 @@
                         </p>
                     </div>
                     {% endif %}
+
+                    <!-- External Links -->
+                    <div class="flex flex-wrap gap-3">
+                        {% if card.pc_url %}
+                        <a 
+                            href="{{ card.pc_url }}" 
+                            target="_blank" 
+                            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                            </svg>
+                            PriceCharting
+                        </a>
+                        {% endif %}
+                        
+                        {% if card.tcgplayer_url %}
+                        <a 
+                            href="{{ card.tcgplayer_url }}" 
+                            target="_blank" 
+                            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd"/>
+                            </svg>
+                            TCGPlayer
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -475,10 +468,13 @@
 </div>
 
 <script>
-function handleImageError(img, fallbackUrl) {
+function handleImageError(img) {
     img.onerror = null;
-    img.src = fallbackUrl;
-    if (!img.src) {
+    const fallbackUrl = img.getAttribute('data-fallback-url');
+    if (fallbackUrl) {
+        img.src = fallbackUrl;
+    }
+    if (!img.src || !fallbackUrl) {
         img.style.display = 'none';
         img.nextElementSibling.style.display = 'flex';
     }
