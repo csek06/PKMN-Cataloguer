@@ -229,8 +229,26 @@ class TCGdxAPIService:
             Best matching card data or None
         """
         try:
-            # First try exact search with all parameters
+            # First try direct ID lookup if we can construct the ID
+            direct_match = await self._try_direct_id_lookup(name, set_name, number)
+            if direct_match:
+                return direct_match
+            
+            # Try exact search with all parameters
             cards = await self.search_cards(name, set_name, number, limit=20)
+            
+            if not cards:
+                # Try with normalized set names (PriceCharting vs TCGdx naming differences)
+                normalized_set = self._normalize_set_name(set_name)
+                if normalized_set != set_name:
+                    logger.info(
+                        "tcgdx_search_fallback_normalized_set",
+                        name=name,
+                        original_set=set_name,
+                        normalized_set=normalized_set,
+                        number=number
+                    )
+                    cards = await self.search_cards(name, normalized_set, number, limit=20)
             
             if not cards:
                 # Try without set name if no exact matches
@@ -296,6 +314,96 @@ class TCGdxAPIService:
                 exc_info=True
             )
             return None
+    
+    async def _try_direct_id_lookup(self, name: str, set_name: str, number: str) -> Optional[Dict]:
+        """
+        Try to construct and lookup card IDs directly based on known patterns.
+        This is much faster than searching when we can predict the ID.
+        """
+        if not number:
+            return None
+        
+        # Common ID patterns for different sets
+        id_patterns = []
+        
+        # Scarlet & Violet 151 patterns
+        if set_name and ("151" in set_name or "scarlet" in set_name.lower()):
+            id_patterns.extend([
+                f"sv03.5-{number}",  # Most common for SV 151
+                f"sv4pt5-{number}",
+                f"sv151-{number}",
+            ])
+        
+        # Other Scarlet & Violet patterns
+        if set_name and "scarlet" in set_name.lower():
+            id_patterns.extend([
+                f"sv1-{number}",
+                f"sv2-{number}",
+                f"sv3-{number}",
+                f"sv4-{number}",
+            ])
+        
+        # Try each pattern
+        for pattern in id_patterns:
+            try:
+                card = await self.get_card_by_id(pattern)
+                if card and card.get("name") and card.get("localId") == number:
+                    # Verify it's a reasonable match
+                    card_name = card.get("name", "").lower()
+                    target_name_lower = name.lower()
+                    
+                    if (target_name_lower in card_name or 
+                        card_name in target_name_lower or
+                        self._names_similar(card_name, target_name_lower)):
+                        
+                        logger.info(
+                            "tcgdx_direct_id_success",
+                            name=name,
+                            set_name=set_name,
+                            number=number,
+                            found_id=pattern,
+                            found_name=card.get("name")
+                        )
+                        return card
+                        
+            except Exception as e:
+                # Continue trying other patterns
+                continue
+        
+        return None
+    
+    def _names_similar(self, name1: str, name2: str) -> bool:
+        """Check if two card names are similar enough to be the same card."""
+        # Remove common variations
+        def normalize_name(name):
+            return (name.replace(" ex", "").replace(" gx", "").replace(" v", "")
+                       .replace("-", "").replace(" ", "").lower())
+        
+        norm1 = normalize_name(name1)
+        norm2 = normalize_name(name2)
+        
+        return norm1 == norm2 or norm1 in norm2 or norm2 in norm1
+    
+    def _normalize_set_name(self, set_name: str) -> str:
+        """
+        Normalize set names to match TCGdx conventions.
+        PriceCharting uses different naming than TCGdx.
+        """
+        if not set_name:
+            return set_name
+        
+        set_lower = set_name.lower()
+        
+        # Scarlet & Violet 151 -> 151
+        if "scarlet" in set_lower and "151" in set_lower:
+            return "151"
+        
+        # Other common mappings can be added here
+        # Base Set -> Base
+        if "base set" in set_lower:
+            return "Base"
+        
+        return set_name
     
     def _find_best_match(self, cards: List[Dict], target_name: str, target_set: str, target_number: str) -> Optional[Dict]:
         """

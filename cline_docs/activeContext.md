@@ -2,6 +2,102 @@
 
 ## Current Focus/Issues
 
+**✅ CARD PREVIEW METADATA AND UI REFRESH ISSUES FULLY RESOLVED (August 16, 2025)**:
+
+### **CARD PREVIEW METADATA ENHANCEMENT - COMPLETED AND TESTED**:
+The card preview functionality has been successfully fixed and now provides complete card information before adding to collection.
+
+**Root Cause Identified and Fixed**:
+- **Issue**: TCGdx API search was failing to find correct cards due to set naming differences between PriceCharting and TCGdx
+- **Example**: "Scarlet & Violet 151" (PriceCharting) vs "151" (TCGdx) with ID pattern "sv03.5-199"
+- **Solution**: Enhanced search logic with direct ID lookup patterns and set name normalization
+
+**Key Improvements Made**:
+- **✅ Direct ID Lookup**: Added intelligent ID pattern matching for faster, more accurate results
+- **✅ Set Name Normalization**: Maps PriceCharting set names to TCGdx conventions
+- **✅ Fallback Search Logic**: Multiple search strategies ensure cards are found
+- **✅ Enhanced Matching**: Better name similarity detection for card matching
+- **✅ Complete Metadata**: Now successfully fetches HP, types, attacks, abilities, retreat cost, rarity
+
+**Technical Implementation**:
+```python
+# Enhanced TCGdx API service with direct ID lookup
+async def _try_direct_id_lookup(self, name: str, set_name: str, number: str):
+    # Scarlet & Violet 151 patterns
+    if set_name and ("151" in set_name or "scarlet" in set_name.lower()):
+        id_patterns.extend([
+            f"sv03.5-{number}",  # Most common for SV 151
+            f"sv4pt5-{number}",
+            f"sv151-{number}",
+        ])
+```
+
+**Verified Results for Charizard EX #199**:
+- **✅ API ID**: sv03.5-199 (correctly found via direct lookup)
+- **✅ HP**: 330 (displays with animated HP bar)
+- **✅ Types**: ['Fire'] (displays with Fire-type badge)
+- **✅ Rarity**: Special illustration rare (displays with gradient styling)
+- **✅ Attacks**: 2 attacks with full details (Brave Wing, Explosive Vortex)
+- **✅ Retreat Cost**: 2 (displays with energy symbols)
+- **✅ Image**: High-quality TCGdx image
+- **✅ Template Sections**: Pokémon Stats and Attacks sections now display correctly
+
+**User Experience Improvements**:
+- **Complete Information**: Users now see full Pokémon battle stats before adding cards
+- **Rich Visual Display**: HP bars, type badges, attack details, energy costs
+- **Accurate Data**: Correct card matching ensures reliable metadata
+- **Fast Performance**: Direct ID lookup reduces API calls and improves speed
+
+### **CARD ADDITION METADATA PERSISTENCE - COMPLETED**:
+When adding cards through search or preview, complete metadata is now fetched and saved immediately.
+
+**Key Improvements Made**:
+- **✅ Immediate Metadata Fetch**: select-card endpoint now fetches TCGdx metadata during addition
+- **✅ Complete Card Records**: Cards are saved with full metadata, not just basic info
+- **✅ No Metadata Refresh Needed**: Cards have complete information from the moment they're added
+- **✅ Sync Timestamps**: Proper api_last_synced_at timestamps set during addition
+
+**Technical Implementation**:
+```python
+# Enhanced select-card endpoint in routes_search.py
+- Scrapes PriceCharting data (existing)
+- Calls tcgdx_api.search_and_find_best_match() for metadata
+- Updates card record with complete TCGdx metadata
+- Sets api_last_synced_at timestamp
+- Saves complete card information to database
+```
+
+**Benefits**:
+- **Immediate Completeness**: Cards have full metadata from addition
+- **Reduced Background Processing**: Less work for metadata refresh service
+- **Better User Experience**: Cards display complete information immediately
+
+### **UI AUTO-REFRESH MECHANISM - ENHANCED**:
+The UI refresh system has been significantly improved to ensure reliable updates after card additions.
+
+**Key Improvements Made**:
+- **✅ Enhanced Event Detection**: Better path matching for card addition events
+- **✅ Multiple Alpine.js Access Methods**: Robust app instance detection with fallbacks
+- **✅ Manual Fallback System**: HTMX-based refresh when Alpine.js fails
+- **✅ Comprehensive Logging**: Debug logging for troubleshooting refresh issues
+- **✅ Both View Support**: Refreshes both table and poster views appropriately
+
+**Technical Implementation**:
+```javascript
+// Enhanced htmx:afterRequest handler in index.html
+- Improved path detection for card additions
+- Multiple methods to access Alpine.js app instance
+- Fallback to manual HTMX requests when needed
+- Console logging for debugging
+- Proper modal closing after additions
+```
+
+**User Experience Improvements**:
+- **Automatic Updates**: Collection refreshes immediately after adding cards
+- **No Manual Refresh**: Users don't need to reload the page
+- **Consistent Behavior**: Works for both "Add Directly" and "Preview → Add" flows
+- **Summary Updates**: Collection statistics refresh automatically
+
 **✅ DATABASE CLEARED AND METADATA REFRESH ISSUE RESOLVED (August 16, 2025)**:
 
 ### **FAKE DATA REMOVAL - COMPLETED**:

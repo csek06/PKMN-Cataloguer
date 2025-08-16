@@ -11,6 +11,7 @@ from app.db import get_session
 from app.logging import get_logger
 from app.schemas import SearchRequest, SearchCandidate
 from app.services.pricecharting_scraper import pricecharting_scraper
+from app.services.tcgdx_api import tcgdx_api
 from app.models import Card, CollectionEntry, PriceChartingLink, PriceSnapshot
 
 
@@ -312,18 +313,85 @@ async def preview_card(
         if metadata.get("notes"):
             rarity, variant = _parse_rarity_and_variant(metadata["notes"])
         
+        # Fetch TCGdx metadata for complete card details
+        tcgdx_metadata = {}
+        if tcgdx_api and await tcgdx_api.is_available():
+            try:
+                logger.info(
+                    "preview_fetching_tcgdx_metadata",
+                    name=name,
+                    set_name=set_name,
+                    number=number,
+                    request_id=request_id
+                )
+                
+                # Search for the card in TCGdx API
+                api_card_data = await tcgdx_api.search_and_find_best_match(
+                    name, set_name, number or metadata.get("card_number", "")
+                )
+                
+                if api_card_data:
+                    # Extract normalized card data
+                    extracted_data = tcgdx_api.extract_card_data(api_card_data)
+                    if extracted_data:
+                        tcgdx_metadata = extracted_data
+                        logger.info(
+                            "preview_tcgdx_metadata_fetched",
+                            name=name,
+                            api_id=extracted_data.get("api_id"),
+                            hp=extracted_data.get("hp"),
+                            types=extracted_data.get("types"),
+                            rarity_from_api=extracted_data.get("rarity"),
+                            request_id=request_id
+                        )
+                    else:
+                        logger.warning(
+                            "preview_tcgdx_extraction_failed",
+                            name=name,
+                            request_id=request_id
+                        )
+                else:
+                    logger.info(
+                        "preview_tcgdx_no_match",
+                        name=name,
+                        set_name=set_name,
+                        number=number,
+                        request_id=request_id
+                    )
+            
+            except Exception as e:
+                logger.warning(
+                    "preview_tcgdx_fetch_failed",
+                    name=name,
+                    error=str(e),
+                    request_id=request_id
+                )
+        
         # Create a temporary card object for preview (not saved to database)
+        # Combine PriceCharting and TCGdx data, with TCGdx taking priority for metadata
         preview_card = {
             "name": name,
             "set_name": set_name,
             "number": number or metadata.get("card_number", ""),
-            "rarity": rarity,
-            "image_small": image_url,
-            "image_large": image_url,
+            "rarity": tcgdx_metadata.get("rarity") or rarity,  # TCGdx rarity takes priority
+            "supertype": tcgdx_metadata.get("supertype", "Pokémon"),
+            "hp": tcgdx_metadata.get("hp"),
+            "types": tcgdx_metadata.get("types", []),
+            "abilities": tcgdx_metadata.get("abilities", []),
+            "attacks": tcgdx_metadata.get("attacks", []),
+            "weaknesses": tcgdx_metadata.get("weaknesses", []),
+            "resistances": tcgdx_metadata.get("resistances", []),
+            "retreat_cost": tcgdx_metadata.get("retreat_cost", 0),
+            "evolves_to": tcgdx_metadata.get("evolves_to", []),
+            "national_pokedex_numbers": tcgdx_metadata.get("national_pokedex_numbers", []),
+            "image_small": tcgdx_metadata.get("api_image_small") or image_url,
+            "image_large": tcgdx_metadata.get("api_image_large") or image_url,
             "pc_url": game_url,
             "tcgplayer_url": metadata.get("tcgplayer_url"),
             "notes": metadata.get("notes", ""),
-            "variant": variant
+            "variant": variant,
+            "api_id": tcgdx_metadata.get("api_id"),
+            "has_tcgdx_metadata": bool(tcgdx_metadata)
         }
         
         # Create pricing info for display
@@ -465,6 +533,7 @@ async def select_card(
         
         # Scrape the actual PriceCharting product page for full pricing data, metadata, and get the game URL
         game_url = None
+        metadata = {}
         if pricecharting_scraper.is_available():
             try:
                 # Use the scraper to get detailed pricing and metadata from the product page
@@ -547,6 +616,73 @@ async def select_card(
                     "price_scraping_failed",
                     card_id=card.id,
                     pc_url=pc_url,
+                    error=str(e),
+                    request_id=request_id
+                )
+        
+        # Fetch TCGdx metadata and update card with complete information
+        if tcgdx_api and await tcgdx_api.is_available():
+            try:
+                logger.info(
+                    "select_card_fetching_tcgdx_metadata",
+                    card_id=card.id,
+                    name=name,
+                    set_name=set_name,
+                    number=number,
+                    request_id=request_id
+                )
+                
+                # Search for the card in TCGdx API
+                api_card_data = await tcgdx_api.search_and_find_best_match(
+                    name, set_name, number or metadata.get("card_number", "")
+                )
+                
+                if api_card_data:
+                    # Extract normalized card data
+                    extracted_data = tcgdx_api.extract_card_data(api_card_data)
+                    if extracted_data:
+                        # Update card with TCGdx metadata
+                        for field, value in extracted_data.items():
+                            if hasattr(card, field) and field not in ['name']:  # Don't override name
+                                setattr(card, field, value)
+                        
+                        # Always update the sync timestamp
+                        card.api_last_synced_at = datetime.utcnow()
+                        card.updated_at = datetime.utcnow()
+                        
+                        logger.info(
+                            "select_card_tcgdx_metadata_updated",
+                            card_id=card.id,
+                            api_id=extracted_data.get("api_id"),
+                            hp=extracted_data.get("hp"),
+                            types=extracted_data.get("types"),
+                            rarity_from_api=extracted_data.get("rarity"),
+                            set_id=extracted_data.get("set_id"),
+                            set_name_from_api=extracted_data.get("set_name"),
+                            request_id=request_id
+                        )
+                    else:
+                        logger.warning(
+                            "select_card_tcgdx_extraction_failed",
+                            card_id=card.id,
+                            name=name,
+                            request_id=request_id
+                        )
+                else:
+                    logger.info(
+                        "select_card_tcgdx_no_match",
+                        card_id=card.id,
+                        name=name,
+                        set_name=set_name,
+                        number=number,
+                        request_id=request_id
+                    )
+            
+            except Exception as e:
+                logger.warning(
+                    "select_card_tcgdx_fetch_failed",
+                    card_id=card.id,
+                    name=name,
                     error=str(e),
                     request_id=request_id
                 )

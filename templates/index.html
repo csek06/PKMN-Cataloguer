@@ -437,6 +437,8 @@ document.addEventListener('htmx:afterRequest', function(event) {
     const path = event.detail.pathInfo.requestPath;
     const status = event.detail.xhr.status;
     
+    console.log('HTMX afterRequest:', { path, status });
+    
     // Check if this was a successful card addition or update
     const isCardAddition = (
         status === 200 && (
@@ -450,21 +452,67 @@ document.addEventListener('htmx:afterRequest', function(event) {
         )
     );
     
+    console.log('Is card addition:', isCardAddition);
+    
     if (isCardAddition) {
+        console.log('Triggering collection refresh...');
+        
         // Reload collection after adding/updating a card
         setTimeout(() => {
-            const app = Alpine.$data(document.querySelector('[x-data]'));
-            if (app && app.loadCollection) {
+            // Try multiple methods to get the Alpine app instance
+            let app = null;
+            
+            // Method 1: Try Alpine.$data
+            try {
+                const appElement = document.querySelector('[x-data="collectionApp()"]');
+                if (appElement && Alpine && Alpine.$data) {
+                    app = Alpine.$data(appElement);
+                }
+            } catch (e) {
+                console.log('Alpine.$data method failed:', e);
+            }
+            
+            // Method 2: Try _x_dataStack
+            if (!app) {
+                try {
+                    const appElement = document.querySelector('[x-data="collectionApp()"]');
+                    if (appElement && appElement._x_dataStack && appElement._x_dataStack[0]) {
+                        app = appElement._x_dataStack[0];
+                    }
+                } catch (e) {
+                    console.log('_x_dataStack method failed:', e);
+                }
+            }
+            
+            // Method 3: Fallback to manual reload
+            if (app && typeof app.loadCollection === 'function') {
+                console.log('Calling app.loadCollection()');
                 app.loadCollection();
+            } else {
+                console.log('App not found, triggering manual reload');
+                // Fallback: trigger HTMX requests manually
+                const tableContainer = document.getElementById('collection-table-container');
+                const posterContainer = document.getElementById('collection-poster-container');
+                
+                if (tableContainer && tableContainer.style.display !== 'none') {
+                    htmx.ajax('GET', '/api/collection', { target: '#collection-table-container' });
+                }
+                if (posterContainer && posterContainer.style.display !== 'none') {
+                    htmx.ajax('GET', '/api/collection/poster', { target: '#collection-poster-container' });
+                }
             }
             
             // Refresh the collection summary stats
+            console.log('Refreshing summary stats');
             htmx.trigger(document.body, 'refresh-summary');
         }, 100);
         
         // Close search modal if it was a card addition from search
         if (path === '/api/collection' || path === '/api/select-card') {
-            closeSearchModal();
+            console.log('Closing search modal');
+            if (typeof closeSearchModal === 'function') {
+                closeSearchModal();
+            }
         }
     }
 });
