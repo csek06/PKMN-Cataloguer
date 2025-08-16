@@ -51,15 +51,21 @@ class AuthService:
             return None
     
     def get_user_by_username(self, username: str, session: Session) -> Optional[User]:
-        """Get a user by username."""
-        statement = select(User).where(User.username == username)
+        """Get a user by username (case-insensitive lookup)."""
+        # Use case-insensitive comparison for username lookup
+        statement = select(User).where(User.username.ilike(username))
         return session.exec(statement).first()
     
     def create_user(self, username: str, password: str, session: Session) -> User:
         """Create a new user."""
+        # Check if user already exists (case-insensitive)
+        existing_user = self.get_user_by_username(username, session)
+        if existing_user:
+            raise ValueError(f"User with username '{username}' already exists")
+        
         password_hash = self.hash_password(password)
         user = User(
-            username=username,
+            username=username,  # Store username as provided (preserve original case)
             password_hash=password_hash,
             is_setup_complete=True
         )
@@ -71,24 +77,30 @@ class AuthService:
         return user
     
     def authenticate_user(self, username: str, password: str, session: Session) -> Optional[User]:
-        """Authenticate a user with username and password."""
+        """Authenticate a user with username and password (case-insensitive username)."""
+        # Find user with case-insensitive username lookup
         user = self.get_user_by_username(username, session)
         if not user:
+            logger.warning("authentication_failed_user_not_found", attempted_username=username)
             return None
         
+        # Password verification is still case-sensitive (as it should be)
         if not self.verify_password(password, user.password_hash):
+            logger.warning("authentication_failed_invalid_password", username=user.username)
             return None
         
-        logger.info("user_authenticated", username=username)
+        logger.info("user_authenticated", username=user.username, attempted_username=username)
         return user
     
     def change_password(self, username: str, old_password: str, new_password: str, session: Session) -> bool:
-        """Change a user's password."""
+        """Change a user's password (case-insensitive username lookup)."""
         user = self.get_user_by_username(username, session)
         if not user:
+            logger.warning("password_change_failed_user_not_found", attempted_username=username)
             return False
         
         if not self.verify_password(old_password, user.password_hash):
+            logger.warning("password_change_failed_invalid_old_password", username=user.username)
             return False
         
         user.password_hash = self.hash_password(new_password)
@@ -96,7 +108,7 @@ class AuthService:
         session.add(user)
         session.commit()
         
-        logger.info("password_changed", username=username)
+        logger.info("password_changed", username=user.username)
         return True
     
     def is_setup_required(self, session: Session) -> bool:
@@ -115,19 +127,25 @@ class AuthService:
         return password == admin_reset_password
     
     def force_password_change(self, username: str, new_password: str, session: Session) -> bool:
-        """Force change password (used with admin reset)."""
+        """Force change password (used with admin reset, case-insensitive username lookup)."""
         user = self.get_user_by_username(username, session)
         if not user:
             # If user doesn't exist, create them
-            self.create_user(username, new_password, session)
-            return True
+            try:
+                self.create_user(username, new_password, session)
+                return True
+            except ValueError:
+                # User already exists (race condition), try to find them again
+                user = self.get_user_by_username(username, session)
+                if not user:
+                    return False
         
         user.password_hash = self.hash_password(new_password)
         user.updated_at = datetime.utcnow()
         session.add(user)
         session.commit()
         
-        logger.info("password_force_changed", username=username)
+        logger.info("password_force_changed", username=user.username)
         return True
 
 
