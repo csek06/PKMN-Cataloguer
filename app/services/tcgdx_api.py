@@ -219,6 +219,7 @@ class TCGdxAPIService:
     async def search_and_find_best_match(self, name: str, set_name: str, number: str) -> Optional[Dict]:
         """
         Search for a card and find the best match based on name, set, and number.
+        Optimized to use the most effective search methods first.
         
         Args:
             name: Card name
@@ -229,16 +230,56 @@ class TCGdxAPIService:
             Best matching card data or None
         """
         try:
-            # First try direct ID lookup if we can construct the ID
+            # Strategy 1: Name-only search (most effective based on testing)
+            # This works best because PriceCharting often has incorrect/incomplete numbers
+            logger.info(
+                "tcgdx_search_primary_name_only",
+                name=name,
+                set_name=set_name,
+                number=number
+            )
+            cards = await self.search_cards(name, limit=20)
+            
+            if cards:
+                # Find best match using all available criteria
+                best_match = self._find_best_match(cards, name, set_name, number)
+                if best_match:
+                    # Get full card details using the ID (search returns minimal data)
+                    card_id = best_match.get("id")
+                    if card_id:
+                        full_card_data = await self.get_card_by_id(card_id)
+                        if full_card_data:
+                            logger.info(
+                                "tcgdx_search_success_name_only",
+                                name=name,
+                                set_name=set_name,
+                                number=number,
+                                match_id=full_card_data.get("id"),
+                                match_name=full_card_data.get("name"),
+                                match_set=full_card_data.get("set", {}).get("name"),
+                                match_number=full_card_data.get("localId")
+                            )
+                            return full_card_data
+                    
+                    # Fallback to minimal data if full lookup fails
+                    logger.info(
+                        "tcgdx_search_success_name_only_minimal",
+                        name=name,
+                        set_name=set_name,
+                        number=number,
+                        match_id=best_match.get("id"),
+                        match_name=best_match.get("name"),
+                        match_number=best_match.get("localId")
+                    )
+                    return best_match
+            
+            # Strategy 2: Try direct ID lookup for known patterns (fast when it works)
             direct_match = await self._try_direct_id_lookup(name, set_name, number)
             if direct_match:
                 return direct_match
             
-            # Try exact search with all parameters
-            cards = await self.search_cards(name, set_name, number, limit=20)
-            
-            if not cards:
-                # Try with normalized set names (PriceCharting vs TCGdx naming differences)
+            # Strategy 3: Try with normalized set names
+            if set_name:
                 normalized_set = self._normalize_set_name(set_name)
                 if normalized_set != set_name:
                     logger.info(
@@ -249,9 +290,27 @@ class TCGdxAPIService:
                         number=number
                     )
                     cards = await self.search_cards(name, normalized_set, number, limit=20)
+                    if cards:
+                        best_match = self._find_best_match(cards, name, set_name, number)
+                        if best_match:
+                            return best_match
             
-            if not cards:
-                # Try without set name if no exact matches
+            # Strategy 4: Try exact search with all parameters (least effective but comprehensive)
+            if set_name and number:
+                logger.info(
+                    "tcgdx_search_fallback_exact",
+                    name=name,
+                    set_name=set_name,
+                    number=number
+                )
+                cards = await self.search_cards(name, set_name, number, limit=20)
+                if cards:
+                    best_match = self._find_best_match(cards, name, set_name, number)
+                    if best_match:
+                        return best_match
+            
+            # Strategy 5: Try without set name but with number
+            if number and number not in ['EX', 'GX', 'V', 'VMAX', 'VSTAR']:  # Skip generic suffixes
                 logger.info(
                     "tcgdx_search_fallback_no_set",
                     name=name,
@@ -259,50 +318,18 @@ class TCGdxAPIService:
                     number=number
                 )
                 cards = await self.search_cards(name, number=number, limit=20)
+                if cards:
+                    best_match = self._find_best_match(cards, name, set_name, number)
+                    if best_match:
+                        return best_match
             
-            if not cards:
-                # Try with just name
-                logger.info(
-                    "tcgdx_search_fallback_name_only",
-                    name=name,
-                    set_name=set_name,
-                    number=number
-                )
-                cards = await self.search_cards(name, limit=20)
-            
-            if not cards:
-                logger.info(
-                    "tcgdx_search_no_results",
-                    name=name,
-                    set_name=set_name,
-                    number=number
-                )
-                return None
-            
-            # Find best match
-            best_match = self._find_best_match(cards, name, set_name, number)
-            
-            if best_match:
-                logger.info(
-                    "tcgdx_search_best_match",
-                    name=name,
-                    set_name=set_name,
-                    number=number,
-                    match_id=best_match.get("id"),
-                    match_name=best_match.get("name"),
-                    match_set=best_match.get("set", {}).get("name"),
-                    match_number=best_match.get("localId")
-                )
-            else:
-                logger.warning(
-                    "tcgdx_search_no_good_match",
-                    name=name,
-                    set_name=set_name,
-                    number=number,
-                    candidates_count=len(cards)
-                )
-            
-            return best_match
+            logger.info(
+                "tcgdx_search_no_results",
+                name=name,
+                set_name=set_name,
+                number=number
+            )
+            return None
             
         except Exception as e:
             logger.error(

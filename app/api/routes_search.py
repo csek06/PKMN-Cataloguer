@@ -650,6 +650,10 @@ async def select_card(
                         card.api_last_synced_at = datetime.utcnow()
                         card.updated_at = datetime.utcnow()
                         
+                        # Commit the card metadata updates immediately to ensure they persist
+                        session.add(card)
+                        session.commit()
+                        
                         logger.info(
                             "select_card_tcgdx_metadata_updated",
                             card_id=card.id,
@@ -679,13 +683,16 @@ async def select_card(
                     )
             
             except Exception as e:
-                logger.warning(
+                logger.error(
                     "select_card_tcgdx_fetch_failed",
                     card_id=card.id,
                     name=name,
                     error=str(e),
-                    request_id=request_id
+                    request_id=request_id,
+                    exc_info=True
                 )
+                # Don't let TCGdx metadata failures prevent card addition
+                pass
         
         # Check if already in collection
         existing_entry = session.exec(
